@@ -15,6 +15,7 @@ control = EncoderController(board, 1, 2)
 lineFollower_color = 'black'  # Default color
 counter = 0
 
+
 def set_color(value):
     global lineFollower_color
     if int(value) != 0:
@@ -22,6 +23,7 @@ def set_color(value):
     else:
         lineFollower_color = 'black'
     print("Updated color:", lineFollower_color)
+
 
 def headToIsland():
     while True:
@@ -39,15 +41,19 @@ def headToIsland():
             else:
                 control.forward_non_stop(15)
 
+
 def get_further_from_wall():
     control.controlled_turn(13, 26)
+
 
 def get_closer_to_wall():
     control.controlled_turn(20, 13)
 
+
 def leave_island():
     global counter
     counter = 0
+
 
 def avoid_wall():
     global counter
@@ -60,6 +66,7 @@ def avoid_wall():
         control.stop()
         control.controlled_turn(4.5, 30)
         sleep(1.3)
+
 
 def main():
     global lineFollower_color
@@ -74,6 +81,7 @@ def main():
             control.forward_non_stop(20)
 
         sleep(0.2)  # Small delay to avoid excessive CPU usage
+
 
 if __name__ == "__main__":
     main()
