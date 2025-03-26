@@ -53,3 +53,19 @@ class EncoderController:
         self.encoder_left.run(0)
         self.encoder_right.run(0)
         pass
+
+    def controlled_turn(self, lspeed,rspeed):
+        self.encoder_left.run(speed=int(lspeed))
+        self.encoder_right.run(speed=int(rspeed))
+        pass
+
+    def stop_turn_left(self, lspeed,rspeed):
+        self.stop()
+        self.move_backward(5, 200)
+        self.move_left(20, 700)
+        pass
+
+    def forward_non_stop(self, speed):
+        self.encoder_right.run(speed=-1*speed)
+        self.encoder_left.run(speed)
+        pass

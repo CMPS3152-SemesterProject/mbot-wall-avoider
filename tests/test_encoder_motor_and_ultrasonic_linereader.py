@@ -11,8 +11,8 @@ makeblock.add_port("COM4")
 board = MeAuriga.connect()
 
 # Connect to the Ultrasonic sensor
-ultrasonic = Ultrasonic(board, port=6)
-linereader = LineFollower(board, port=10)
+ultrasonic = Ultrasonic(board, port=7)
+linereader = LineFollower(board, port=6)
 
 
 def on_received(value):
@@ -23,34 +23,34 @@ def on_line(value):
     print("line follower status:", value)
 
 # Move forward
-encoder_controller = EncoderController(board, 1, 2)
-encoder_controller.move_forward(100, 500)
-sleep(3)
-encoder_controller.stop()
-
-# Move backward
-encoder_controller.move_backward(100, 500)
-sleep(3)
-encoder_controller.stop()
-
-# Turn Left
-encoder_controller.move_left(100, 500)
-sleep(3)
-# Sharp Left
-encoder_controller.sharp_left(100, 500)
-sleep(3)
-
-# Turn Right
-encoder_controller.move_right(100, 500)
-sleep(3)
-# Sharp Right
-encoder_controller.sharp_right(100, 500)
-sleep(3)
-
-encoder_controller.stop()
+# encoder_controller = EncoderController(board, 1, 2)
+# encoder_controller.move_forward(100, 500)
+# sleep(3)
+# encoder_controller.stop()
+#
+# # Move backward
+# encoder_controller.move_backward(100, 500)
+# sleep(3)
+# encoder_controller.stop()
+#
+# # Turn Left
+# encoder_controller.move_left(100, 500)
+# sleep(3)
+# # Sharp Left
+# encoder_controller.sharp_left(100, 500)
+# sleep(3)
+#
+# # Turn Right
+# encoder_controller.move_right(100, 500)
+# sleep(3)
+# # Sharp Right
+# encoder_controller.sharp_right(100, 500)
+# sleep(3)
+#
+# encoder_controller.stop()
 
 while True:
     ultrasonic.read(on_received)
     linereader.read(on_line)
 
-    sleep(1)
+    sleep(0.1)
