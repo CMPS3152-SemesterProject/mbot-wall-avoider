@@ -11,6 +11,7 @@ board = MeAuriga.connect()
 lineFollower = LineFollower(board, port=6)
 ultrasonicSensor = Ultrasonic(board, port=7)
 control = EncoderController(board, 1, 2)
+unjam_retries = 0
 
 lineFollower_color = 'black'  # Default color
 counter = 0
@@ -87,10 +88,20 @@ def avoid_wall():
 def main():
     global lineFollower_color
     global ultrasonicSensor
+    global unjam_retries
 
     control.stop()
     sleep(1)
     while True:
+        distance = ultrasonicSensor.get_distance(port=7)
+        print("Distance:", distance)
+        yaw = board.get_yaw()
+        roll = board.get_roll()
+        pitch = board.get_pitch()
+        print("Yaw:", yaw)
+        print("Roll:", roll)
+        print("Pitch:", pitch)
+        print(float(roll) < -30.0, float(pitch) < -1.0)
         # Continuously read the line follower data and update color
         lineFollower.read(set_color)
         if lineFollower_color == 'white':
@@ -98,18 +109,26 @@ def main():
             # Check if we are in island for a 180-degree turn
             if counter == 4:
                 turn_180_degrees()
-                # head to island
+                # Head to island
                 head_to_island()
-        elif ultrasonicSensor.get_distance(port=7) > 12:  # Is far from the wall
+        # Yank the robot out of the wall if it crashes
+        elif distance >= 12 and lineFollower_color == 'black' and float(roll) < -30.0:
+            control.move_backward(int(50 * unjam_retries), 500)
+            unjam_retries += 1
+        elif distance > 12:  # Is far from the wall
             get_closer_to_wall()
-        elif ultrasonicSensor.get_distance(port=7) < 5:  # Is too close to the wall
+        elif distance < 5:  # Is too close to the wall
             get_further_from_wall()
         else:
             control.forward_non_stop(15)
-
+        # We're on level ground, reset the unjam retries
+        if unjam_retries >= 2 and float(roll) > 0:
+            # "Do not worry son, I am here"
+            unjam_retries = 0
         # #NEED SOME TWEAKING BASED ON PERFORMANCE WITH SENSORS
         sleep(0.1)  # Small delay to avoid excessive CPU usage
 
-# Cal the main startup function
+
+# Call the main startup function
 if __name__ == "__main__":
     main()
