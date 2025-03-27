@@ -15,7 +15,8 @@ control = EncoderController(board, 1, 2)
 lineFollower_color = 'black'  # Default color
 counter = 0
 
-def set_color(value): #set color of line follower
+
+def set_color(value):  # Set color of line follower
     global lineFollower_color
     if int(value) != 0:
         lineFollower_color = 'white'
@@ -23,7 +24,8 @@ def set_color(value): #set color of line follower
         lineFollower_color = 'black'
     print("Updated color:", lineFollower_color)
 
-def head_to_island(): #head to island function
+
+def head_to_island():  # Head to island function
     while True:
         if lineFollower_color == 'white':
             control.stop()
@@ -44,17 +46,21 @@ def head_to_island(): #head to island function
             else:
                 control.forward_non_stop(15)
 
+
 def get_further_from_wall():
     control.controlled_turn(13, 26)
 
+
 def get_closer_to_wall():
     control.controlled_turn(20, 13)
+
 
 def leave_island_setup():
     global counter
     counter = 0
     control.stop()
     control.move_backward(15, 300)
+
 
 def turn_180_degrees():
     control.stop()
@@ -68,14 +74,13 @@ def turn_180_degrees():
 
 def avoid_wall():
     global counter
-    control.stop() # stop when front wall is hit or too close
-    board.set_color(5, 255, 0, 0) # set all LED to red
+    control.stop()  # Stop when front wall is hit or too close
+    board.set_color(5, 255, 0, 0)  # Set all LED to red
     control.move_backward(50, 400)  # Move back a bit
     # Turn left 90 degrees, might need some tweaking
     control.move_left(50, 700)
-    control.stop() #stop moving
-    sleep(1) #sleep for 1 second for line follower to update
-
+    control.stop()  # Stop moving
+    sleep(1)  # Sleep for 1 second for line follower to update
     counter += 1
 
 
@@ -90,20 +95,21 @@ def main():
         lineFollower.read(set_color)
         if lineFollower_color == 'white':
             avoid_wall()
-            #check if we are in island for a 180-degree turn
+            # Check if we are in island for a 180-degree turn
             if counter == 4:
                 turn_180_degrees()
                 # head to island
                 head_to_island()
-        elif ultrasonicSensor.get_distance(port=7) > 12: #is far from the wall
+        elif ultrasonicSensor.get_distance(port=7) > 12:  # Is far from the wall
             get_closer_to_wall()
-        elif ultrasonicSensor.get_distance(port=7) < 5: #is too close to the wall
+        elif ultrasonicSensor.get_distance(port=7) < 5:  # Is too close to the wall
             get_further_from_wall()
         else:
             control.forward_non_stop(15)
 
-        ##NEED SOME TWEAKING BASED ON PERFORMANCE WITH SENSORS
+        # #NEED SOME TWEAKING BASED ON PERFORMANCE WITH SENSORS
         sleep(0.1)  # Small delay to avoid excessive CPU usage
 
-if __name__ == "__main__": #not sure if this is needed
+# Cal the main startup function
+if __name__ == "__main__":
     main()
