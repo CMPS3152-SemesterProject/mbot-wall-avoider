@@ -144,15 +144,15 @@ def main():
             unjam_retries += 1
 
         # 3) If far from the wall or just finished moving away => get closer
-        elif distance >= 5 or move_away_from_wall is True:
+        elif distance >= 5:
             get_closer_to_right_wall()
             sleep(0.5)
-            move_away_from_wall = False
+            move_away_from_wall = True
 
         # 4) If too close to the wall => get further away
-        elif distance <= 2:
+        elif distance <= 2 or move_away_from_wall is True:
             get_further_from_right_wall()
-            move_away_from_wall = True
+            move_away_from_wall = False
             sleep(3)
 
         # 5) Otherwise, move forward
