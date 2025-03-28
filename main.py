@@ -6,9 +6,11 @@ from makeblock.modules.rj25 import LineFollower
 from makeblock.modules.rj25 import Ultrasonic
 from time import sleep
 
+
 # -------------------------
 #   Connect to Me Auriga
 # -------------------------
+# Fallback to COM4 if not using BLE
 makeblock.add_port("COM4")
 board = MeAuriga.connect(BLE=True)
 
