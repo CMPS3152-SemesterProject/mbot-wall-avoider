@@ -1,5 +1,11 @@
 import subprocess
 import re
+import serial.tools.list_ports
+
+x = serial.tools.list_ports.comports()
+for port in x:
+    print(port.name)
+    print(port.hwid)
 
 
 def get_com_ports_with_devcon():
