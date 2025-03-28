@@ -10,7 +10,7 @@ from time import sleep
 #   Connect to Me Auriga
 # -------------------------
 makeblock.add_port("COM4")
-board = MeAuriga.connect()
+board = MeAuriga.connect(BLE=True)
 
 # -------------------------
 #   Sensor Setup
@@ -115,12 +115,13 @@ def main():
     print("Starting main loop...")
 
     while True:
+        board.set_color(0, 0, 0, 0)  # Set all LEDs to off
         # Read ultrasonic distance
         distance = ultrasonicSensor.get_distance(port=7)
         # If the sensor reads 400, it's typically 'no object' or out of range.
         # Instead of forcing it to zero, we can keep it at 400 or set a default:
         if distance == 400:
-            distance = 30  # Treat as some moderate distance
+            distance = 0  # Treat as some moderate distance (turn right)
         print("Distance:", distance)
 
         # Read orientation
@@ -166,7 +167,7 @@ def main():
             unjam_retries = 0
 
         # Small delay
-        sleep(0.1)
+        sleep(0.05)
 
 
 # Entry point
