@@ -1,7 +1,7 @@
 import multiprocessing
 
 import BluetoothConnector
-Bluetooth = True
+Bluetooth = False
 DeviceId = "00:1B:10:FB:A6:7C"
 
 
@@ -18,7 +18,7 @@ def startup():
 
 if __name__ == "__main__":
     # Start the connection to the BLE bridge
-    if Bluetooth:
+    if Bluetooth is True:
         multiprocessing.set_start_method("spawn", force=True)
-    BluetoothConnector.connect_bridge(device_id=DeviceId)
+        BluetoothConnector.connect_bridge(device_id=DeviceId)
     startup()

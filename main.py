@@ -12,7 +12,7 @@ from time import sleep
 # -------------------------
 # Fallback to COM4 if not using BLE
 makeblock.add_port("COM4")
-board = MeAuriga.connect(BLE=True)
+board = MeAuriga.connect(BLE=False)
 
 # -------------------------
 #   Sensor Setup
