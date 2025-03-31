@@ -4,7 +4,7 @@ from time import sleep
 
 makeblock.add_port("COM4")
 # Connect to the MeAuriga board
-board = MeAuriga.connect()
+board = MeAuriga.connect(BLE=True)
 
 # Set the color of an RGB LED
 board.set_color(1, 255, 0, 0)

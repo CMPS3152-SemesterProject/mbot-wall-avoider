@@ -6,129 +6,172 @@ from makeblock.modules.rj25 import LineFollower
 from makeblock.modules.rj25 import Ultrasonic
 from time import sleep
 
+
+# -------------------------
+#   Connect to Me Auriga
+# -------------------------
+# Fallback to COM4 if not using BLE
 makeblock.add_port("COM4")
-board = MeAuriga.connect()
+board = MeAuriga.connect(BLE=True)
+
+# -------------------------
+#   Sensor Setup
+# -------------------------
+# Double-check the physical ports on your robot:
 lineFollower = LineFollower(board, port=6)
 ultrasonicSensor = Ultrasonic(board, port=7)
-control = EncoderController(board, 1, 2)
-unjam_retries = 0
 
+# -------------------------
+#   Motor / Controller
+# -------------------------
+control = EncoderController(board, 1, 2)
+
+# -------------------------
+#   Global Variables
+# -------------------------
+unjam_retries = 0
+move_away_from_wall = False
 lineFollower_color = 'black'  # Default color
 counter = 0
 
 
-def set_color(value):  # Set color of line follower
+def set_color(value):
+    """
+    Sets the global lineFollower_color based on
+    the integer output of the line follower sensor.
+    Typical raw values can be 0, 1, 2, 3, etc.
+    You may need to adjust if your sensor outputs differently.
+    """
     global lineFollower_color
-    if int(value) != 0:
+    # Debug: print("Raw line follower value:", value)
+    if int(value) == 3:
         lineFollower_color = 'white'
+    elif int(value) == 2:
+        lineFollower_color = 'right'
+    elif int(value) == 1:
+        lineFollower_color = 'left'
     else:
         lineFollower_color = 'black'
     print("Updated color:", lineFollower_color)
 
 
-def head_to_island():  # Head to island function
-    while True:
-        if lineFollower_color == 'white':
-            control.stop()
-            sleep(10)
-            leave_island_setup()
-            turn_180_degrees()
-            control.stop()
-            sleep(.5)
-            continue
-        else:
-            distance = ultrasonicSensor.get_distance(port=7)
-            if distance > 12:
-                control.controlled_turn(30, 11.5)
-            elif distance < 5:
-                get_further_from_wall()
-            elif distance > 7:
-                get_closer_to_wall()
-            else:
-                control.forward_non_stop(15)
+def get_further_from_right_wall():
+    """
+    Commands a left turn to move away from the right wall.
+    Adjust these turn values as needed.
+    """
+    control.controlled_turn(13, -16)  # Slight left turn
+    print("Turning left to get away from the right wall.")
 
 
-def get_further_from_wall():
-    control.controlled_turn(13, 26)
+def get_closer_to_right_wall():
+    """
+    Commands a right turn to move closer to the right wall.
+    Adjust these values to fine-tune how it approaches the wall.
+    """
+    control.controlled_turn(22, -13)  # Slight right turn
+    sleep(1.25)
+    control.forward_non_stop(30)
+    print("Turning right to get closer to the right wall.")
 
 
-def get_closer_to_wall():
-    control.controlled_turn(20, 13)
-
-
-def leave_island_setup():
-    global counter
-    counter = 0
+def avoid_wall(distance):
+    """
+    Handles a situation where the robot detects a wall
+    directly in front or is otherwise in a corner.
+    """
     control.stop()
-    control.move_backward(15, 300)
+    board.set_color(5, 255, 0, 0)  # Set all LEDs to red
+    print("Avoiding wall. Distance:", distance)
+    sleep(1)
 
+    # Move backward slightly
+    control.move_backward(50, 750)
 
-def turn_180_degrees():
+    # Decide which way to turn based on lineFollower_color
+    if (lineFollower_color == 'left') or (lineFollower_color == 'white' and distance <= 10):
+        # Turn left
+        control.move_left(28, 1450)
+    elif lineFollower_color == 'right':
+        # Turn right
+        control.move_right(28, 1450)
+    elif lineFollower_color == 'white':
+        # If still white, just move backward a bit more
+        control.move_backward(50, 700)
+
+    # Move forward a bit to commit to the turn
+    control.move_forward(28, 1650)
     control.stop()
-    sleep(.3)
-    # make a 180-degree turn
-    control.controlled_turn(5, 28)
-    sleep(1.3)
-    # stop
-    control.stop()
-
-
-def avoid_wall():
-    global counter
-    control.stop()  # Stop when front wall is hit or too close
-    board.set_color(5, 255, 0, 0)  # Set all LED to red
-    control.move_backward(50, 400)  # Move back a bit
-    # Turn left 90 degrees, might need some tweaking
-    control.move_left(50, 700)
-    control.stop()  # Stop moving
-    sleep(1)  # Sleep for 1 second for line follower to update
-    counter += 1
+    sleep(0.5)  # brief pause for sensors to update
 
 
 def main():
     global lineFollower_color
     global ultrasonicSensor
     global unjam_retries
+    global move_away_from_wall
 
+    # Initial stop
     control.stop()
     sleep(1)
+    print("Starting main loop...")
+
     while True:
+        board.set_color(0, 0, 0, 0)  # Set all LEDs to off
+        # Read ultrasonic distance
         distance = ultrasonicSensor.get_distance(port=7)
+        # If the sensor reads 400, it's typically 'no object' or out of range.
+        # Instead of forcing it to zero, we can keep it at 400 or set a default:
+        if distance == 400:
+            distance = 0  # Treat as some moderate distance (turn right)
         print("Distance:", distance)
+
+        # Read orientation
         yaw = board.get_yaw()
         roll = board.get_roll()
         pitch = board.get_pitch()
-        print("Yaw:", yaw)
-        print("Roll:", roll)
-        print("Pitch:", pitch)
-        print(float(roll) < -30.0, float(pitch) < -1.0)
-        # Continuously read the line follower data and update color
+        print(f"Yaw: {yaw}, Roll: {roll}, Pitch: {pitch}")
+
+        # Read line follower sensor and update color
         lineFollower.read(set_color)
-        if lineFollower_color == 'white':
-            avoid_wall()
-            # Check if we are in island for a 180-degree turn
-            if counter == 4:
-                turn_180_degrees()
-                # Head to island
-                head_to_island()
-        # Yank the robot out of the wall if it crashes
-        elif distance >= 12 and lineFollower_color == 'black' and float(roll) < -30.0:
-            control.move_backward(int(50 * unjam_retries), 500)
+
+        # Decide movement based on sensors
+        # 1) If line follower says white/left/right => wall avoidance
+        if lineFollower_color in ('white', 'left', 'right'):
+            avoid_wall(distance)
+
+        # 2) If on black line but the robot is tilted significantly => unjam
+        elif lineFollower_color == 'black' and float(roll) < -30.0:
+            print("Detected tilt; attempting to unjam.")
+            control.move_backward(int(50 * (unjam_retries + 1)), 500)
             unjam_retries += 1
-        elif distance > 12:  # Is far from the wall
-            get_closer_to_wall()
-        elif distance < 5:  # Is too close to the wall
-            get_further_from_wall()
+
+        # 3) If far from the wall or just finished moving away => get closer
+        elif distance >= 5:
+            get_closer_to_right_wall()
+            sleep(0.5)
+            move_away_from_wall = True
+
+        # 4) If too close to the wall => get further away
+        elif distance <= 2 or move_away_from_wall is True:
+            get_further_from_right_wall()
+            move_away_from_wall = False
+            sleep(3)
+
+        # 5) Otherwise, move forward
         else:
-            control.forward_non_stop(15)
-        # We're on level ground, reset the unjam retries
-        if unjam_retries >= 2 and float(roll) > 0:
-            # "Do not worry son, I am here"
+            print("Moving forward at speed 20.")
+            control.forward_non_stop(20)
+
+        # Reset unjam if we have done a couple attempts and robot is level
+        if unjam_retries >= 2 and float(roll) > -5.0:
+            print("Resetting unjam attempts.")
             unjam_retries = 0
-        # #NEED SOME TWEAKING BASED ON PERFORMANCE WITH SENSORS
-        sleep(0.1)  # Small delay to avoid excessive CPU usage
+
+        # Small delay
+        sleep(0.05)
 
 
-# Call the main startup function
+# Entry point
 if __name__ == "__main__":
     main()
