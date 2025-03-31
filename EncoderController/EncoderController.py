@@ -56,7 +56,7 @@ class EncoderController:
 
     def controlled_turn(self, lspeed,rspeed):
         self.encoder_left.run(speed=int(lspeed))
-        self.encoder_right.run(speed=int(rspeed))
+        self.encoder_right.run(speed=int(-1*rspeed))
         pass
 
     def stop_turn_left(self, lspeed,rspeed):

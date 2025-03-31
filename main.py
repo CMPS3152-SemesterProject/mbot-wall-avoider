@@ -65,7 +65,6 @@ def turn_180_degrees():
     # stop
     control.stop()
 
-
 def avoid_wall():
     global counter
     control.stop() # stop when front wall is hit or too close
@@ -88,6 +87,8 @@ def main():
     while True:
         # Continuously read the line follower data and update color
         lineFollower.read(set_color)
+        # ultrasonicSensor.read(set_distance)
+        print(ultrasonicSensor.get_distance(port=7))
         if lineFollower_color == 'white':
             avoid_wall()
             #check if we are in island for a 180-degree turn
@@ -97,10 +98,10 @@ def main():
                 head_to_island()
         elif ultrasonicSensor.get_distance(port=7) > 12: #is far from the wall
             get_closer_to_wall()
-        elif ultrasonicSensor.get_distance(port=7) < 5: #is too close to the wall
+        elif ultrasonicSensor.get_distance(port=7) < 7: #is too close to the wall
             get_further_from_wall()
         else:
-            control.forward_non_stop(15)
+            control.forward_non_stop(20)
 
         ##NEED SOME TWEAKING BASED ON PERFORMANCE WITH SENSORS
         sleep(0.1)  # Small delay to avoid excessive CPU usage
