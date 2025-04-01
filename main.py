@@ -33,6 +33,7 @@ lineFollower_color = 'black'  # Default color
 distance = 0
 distance_left = 0
 distance_right = 0
+unjam_retries = 0
 SPEED = 130
 OPTIMISTIC = True
 
@@ -105,14 +106,21 @@ def turn_90_left(speed, is_left):
 
 
 def main():
-    global lineFollower_color, ultrasonicSensor, distance, SPEED, distance_left, distance_right
+    global lineFollower_color, ultrasonicSensor, distance, SPEED, distance_left, distance_right, unjam_retries
+    roll = board.get_roll()
 
     print(f"Distance: {distance}")
     print(f"Distance Left: {distance_left}")
     print(f"Distance Right: {distance_right}")
     print(f"Color: {lineFollower_color}")
+    print(f"Roll: {roll}")
 
-    if distance > 15:
+    # If on black line but the robot is tilted significantly => unjam
+    if lineFollower_color == 'black' and float(roll) < -30.0:
+        print("Detected tilt; attempting to unjam.")
+        control.move_backward(int(50 * (unjam_retries + 1)), 500)
+        unjam_retries += 1
+    elif distance > 15:
         control.push_forward(SPEED)
     else:
         control.stop()
@@ -128,7 +136,6 @@ def main():
         turn_90_left(speed=(SPEED * -1), is_left="right")
 
         sleep(0.5)
-
         # Compare left and right distances to decide the direction
         if distance_left > distance_right:
             print("Turning LEFT (More space to the left)")
@@ -147,6 +154,11 @@ def main():
 
 # Entrypoint
 def entry_point():
+    board.set_tone(50, 500)
+    ultrasonicSensor.read(get_distance)
+    lineFollower.read(get_code)
+    sleep(3)
+    board.set_tone(100, 300)
     while True:
         ultrasonicSensor.read(get_distance)
         lineFollower.read(get_code)
