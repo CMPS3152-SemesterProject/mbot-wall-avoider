@@ -34,6 +34,7 @@ distance = 0
 distance_left = 0
 distance_right = 0
 SPEED = 130
+OPTIMISTIC = False
 
 
 # -------------------------
@@ -63,7 +64,10 @@ def get_distance(value):
     """
     global distance
     if distance == 400:
-        distance = 0
+        if OPTIMISTIC:  # If the distance is 400, we are searching optimistically
+            distance = value
+        else:
+            distance = 0
     else:
         distance = value
 
