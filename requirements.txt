@@ -1,1 +1,4 @@
 git+https://github.com/CMPS3152-SemesterProject/makeblock
+
+pyserial~=3.5
+matplotlib~=3.7.5
