@@ -34,8 +34,8 @@ distance = 0
 distance_left = 0
 distance_right = 0
 unjam_retries = 0
-SPEED = 130
-OPTIMISTIC = True
+SPEED = 60
+OPTIMISTIC = False
 
 
 # -------------------------
@@ -50,6 +50,7 @@ def get_code(value):
     global lineFollower_color
     global distance_right
     if int(value) > 0:
+        board.set_tone(300, 500)
         lineFollower_color = 'white'
         distance_right = 20
     else:
