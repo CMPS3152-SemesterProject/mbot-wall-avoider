@@ -31,6 +31,9 @@ control = EncoderController(board, 1, 2)
 # -------------------------
 lineFollower_color = 'black'  # Default color
 distance = 0
+distance_left = 0
+distance_right = 0
+SPEED = 130
 
 
 # -------------------------
@@ -43,10 +46,13 @@ def get_code(value):
     :return: The color of the line follower sensor
     """
     global lineFollower_color
+    global distance_right
     if int(value) > 0:
         lineFollower_color = 'white'
+        distance_right = 20
     else:
         lineFollower_color = 'black'
+        distance_right = 0
 
 
 def get_distance(value):
@@ -56,9 +62,36 @@ def get_distance(value):
     :return: Value of the distance
     """
     global distance
-    if distance is 400:
+    if distance == 400:
         distance = 0
-    distance = value
+    else:
+        distance = value
+
+# -------------------------
+#   Prototype Functions
+# -------------------------
+
+
+def turn_360(speed):
+    if int(speed) < 0:
+        timeout = (speed * -1)
+    else:
+        timeout = speed
+    control.sharp_left(speed, int(2000 * (120 / timeout)))
+
+
+def turn_180_left(speed, is_left):
+    global distance_left
+    global distance_right
+    if int(speed) < 0:
+        timeout = (speed * -1)
+    else:
+        timeout = speed
+    control.sharp_left(speed, int(500 * (120 / timeout)))
+    if is_left == "left":
+        distance_left = distance
+    elif is_left == "right":
+        distance_right = distance
 
 # -------------------------
 #   Main Loop
@@ -69,12 +102,24 @@ def main():
     global lineFollower_color
     global ultrasonicSensor
     global distance
+    global SPEED
+
     print("Distance: ", distance)
     print("Color: ", lineFollower_color)
     if distance > 15:
-        control.push_forward(100)
+        control.push_forward(SPEED)
     else:
         control.stop()
+        sleep(0.5)
+        # Gauge the distance to the left
+        turn_180_left(speed=SPEED, is_left="left")
+        sleep(0.05)
+        # Reset the bot position
+        turn_180_left(speed=(SPEED * -1), is_left="none")
+        # Gauge the distance to the right
+        turn_180_left(speed=(SPEED * -1), is_left="right")
+        sleep(0.05)
+
 
 
 # Entry point
