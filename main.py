@@ -34,7 +34,7 @@ distance = 0
 distance_left = 0
 distance_right = 0
 SPEED = 130
-OPTIMISTIC = False
+OPTIMISTIC = True
 
 
 # -------------------------
@@ -105,26 +105,41 @@ def turn_180_left(speed, is_left):
 
 
 def main():
-    global lineFollower_color
-    global ultrasonicSensor
-    global distance
-    global SPEED
+    global lineFollower_color, ultrasonicSensor, distance, SPEED, distance_left, distance_right
 
-    print("Distance: ", distance)
-    print("Distance Left: ", distance_left)
-    print("Distance Right: ", distance_right)
-    print("Color: ", lineFollower_color)
+    print(f"Distance: {distance}")
+    print(f"Distance Left: {distance_left}")
+    print(f"Distance Right: {distance_right}")
+    print(f"Color: {lineFollower_color}")
+
     if distance > 15:
         control.push_forward(SPEED)
     else:
         control.stop()
         sleep(0.5)
-        # Gauge the distance to the left
+
+        # Measure distance to the left
         turn_180_left(speed=SPEED, is_left="left")
-        # Reset the bot position
+
+        # Reset to original position
         turn_180_left(speed=(SPEED * -1), is_left="none")
-        # Gauge the distance to the right
+
+        # Measure distance to the right
         turn_180_left(speed=(SPEED * -1), is_left="right")
+
+        sleep(0.5)
+
+        # Compare left and right distances to decide the direction
+        if distance_left > distance_right:
+            print("Turning LEFT (More space to the left)")
+            control.sharp_left(SPEED, 1000)  # Adjust the turning time if necessary
+        elif distance_right > distance_left:
+            print("Turning RIGHT (More space to the right)")
+            control.sharp_right(SPEED, 1000)  # Adjust the turning time if necessary
+        else:
+            print("Distances are equal or unclear, turning around.")
+            turn_360(SPEED)
+
         sleep(0.5)
 
 
