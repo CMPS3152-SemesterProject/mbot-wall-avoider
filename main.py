@@ -87,10 +87,12 @@ def turn_180_left(speed, is_left):
         timeout = (speed * -1)
     else:
         timeout = speed
-    control.sharp_left(speed, int(500 * (120 / timeout)))
+    control.sharp_left(speed, int(330 * (120 / timeout)))
     if is_left == "left":
+        sleep(1)
         distance_left = distance
     elif is_left == "right":
+        sleep(1)
         distance_right = distance
 
 # -------------------------
@@ -105,6 +107,8 @@ def main():
     global SPEED
 
     print("Distance: ", distance)
+    print("Distance Left: ", distance_left)
+    print("Distance Right: ", distance_right)
     print("Color: ", lineFollower_color)
     if distance > 15:
         control.push_forward(SPEED)
@@ -113,16 +117,14 @@ def main():
         sleep(0.5)
         # Gauge the distance to the left
         turn_180_left(speed=SPEED, is_left="left")
-        sleep(0.05)
         # Reset the bot position
         turn_180_left(speed=(SPEED * -1), is_left="none")
         # Gauge the distance to the right
         turn_180_left(speed=(SPEED * -1), is_left="right")
-        sleep(0.05)
+        sleep(0.5)
 
 
-
-# Entry point
+# Entrypoint
 def entry_point():
     while True:
         ultrasonicSensor.read(get_distance)
