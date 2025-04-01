@@ -81,10 +81,10 @@ def turn_360(speed):
         timeout = (speed * -1)
     else:
         timeout = speed
-    control.sharp_left(speed, int(2000 * (120 / timeout)))
+    control.sharp_left(speed, int(1058 * (120 / timeout)))
 
 
-def turn_180_left(speed, is_left):
+def turn_90_left(speed, is_left):
     global distance_left
     global distance_right
     if int(speed) < 0:
@@ -119,13 +119,13 @@ def main():
         sleep(0.5)
 
         # Measure distance to the left
-        turn_180_left(speed=SPEED, is_left="left")
+        turn_90_left(speed=SPEED, is_left="left")
 
         # Reset to original position
-        turn_180_left(speed=(SPEED * -1), is_left="none")
+        turn_90_left(speed=(SPEED * -1), is_left="none")
 
         # Measure distance to the right
-        turn_180_left(speed=(SPEED * -1), is_left="right")
+        turn_90_left(speed=(SPEED * -1), is_left="right")
 
         sleep(0.5)
 
@@ -138,7 +138,9 @@ def main():
             control.sharp_right(SPEED, 1000)  # Adjust the turning time if necessary
         else:
             print("Distances are equal or unclear, turning around.")
-            turn_360(SPEED)
+            turn_90_left(SPEED, is_left="none")
+            sleep(0.05)
+            turn_90_left(SPEED, is_left="none")
 
         sleep(0.5)
 
