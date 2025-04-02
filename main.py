@@ -1,4 +1,6 @@
 import makeblock
+# import os
+import sys
 
 from EncoderController import EncoderController
 from makeblock.boards import MeAuriga
@@ -12,7 +14,7 @@ from time import sleep
 # -------------------------
 # Fallback to COM4 if not using BLE
 makeblock.add_port("COM4")
-board = MeAuriga.connect(BLE=False)
+board = MeAuriga.connect(BLE=True)
 
 # -------------------------
 #   Sensor Setup
@@ -29,8 +31,6 @@ control = EncoderController(board, 1, 2)
 # -------------------------
 #   Global Variables
 # -------------------------
-unjam_retries = 0
-move_away_from_wall = False
 lineFollower_color = 'black'  # Default color
 counter = 0
 
@@ -38,21 +38,16 @@ def set_color(value): #set color of line follower
     global lineFollower_color
     if int(value) != 0:
         lineFollower_color = 'white'
-    elif int(value) == 2:
-        lineFollower_color = 'right'
-    elif int(value) == 1:
-        lineFollower_color = 'left'
     else:
         lineFollower_color = 'black'
-    print("Updated color:", lineFollower_color)
 
 def head_to_island(): #head to island function
     while True:
-        if lineFollower_color == 'white':
+        if lineFollower_color == 'white': #break inside island for 10 seconds
             control.stop()
             sleep(10)
-            leave_island_setup()
-            turn_180_degrees()
+            leave_island_setup() # gets a bit away frm wall
+            turn_180_degrees() #180-degree turn
             control.stop()
             sleep(.5)
             continue
@@ -65,13 +60,15 @@ def head_to_island(): #head to island function
             elif distance > 7:
                 get_closer_to_wall()
             else:
-                control.forward_non_stop(15)
+                control.forward_non_stop(25)
+            # Update print statement
+            print(f"\r\033[94mDistance:\033[0m \033[92m{distance}\033[0m | \033[94mLine color:\033[0m \033[92m{lineFollower_color}\033[0m", end="", flush=True)
 
 def get_further_from_wall():
     control.controlled_turn(13, 26)
 
 def get_closer_to_wall():
-    control.controlled_turn(20, 13)
+    control.controlled_turn(25, 13)
 
 def leave_island_setup():
     global counter
@@ -99,18 +96,19 @@ def avoid_wall():
     sleep(1) #sleep for 1 second for line follower to update
 
     counter += 1
+    # Update print statement
+    print(f"\r\033[94mDistance:\033[0m \033[92m{ultrasonicSensor.get_distance(port=7)}\033[0m | \033[94mLine color:\033[0m \033[92m{lineFollower_color}\033[0m", end="", flush=True)
 
 
 def main():
     global lineFollower_color
     global ultrasonicSensor
-    global unjam_retries
-    global move_away_from_wall
+    global control
 
     # Initial stop
     control.stop()
     sleep(1)
-    print("Starting main loop...")
+    print("\033[92mStarting main loop...\033[0m")  # Print in green
 
     while True:
         # Continuously read the line follower data and update color
@@ -121,46 +119,31 @@ def main():
         # Instead of forcing it to zero, we can keep it at 400 or set a default:
         if distance == 400:
             distance = 0  # Treat as some moderate distance (turn right)
-        print("Distance:", distance)
 
-        # Read orientation
-        yaw = board.get_yaw()
-        roll = board.get_roll()
-        pitch = board.get_pitch()
-        print(f"Yaw: {yaw}, Roll: {roll}, Pitch: {pitch}")
+        print("\r" + " " * 50, end="")  # Clears the line
+        # Add color to the distance and line color, and different colors to their values
+        print(f"\r\033[94mDistance:\033[0m \033[92m{distance}\033[0m | \033[94mLine color:\033[0m \033[92m{lineFollower_color}\033[0m", end="", flush=True)
 
-        # ultrasonicSensor.read(set_distance)
-        print(distance)
-        if lineFollower_color in ('white', 'left', 'right'):
+        if lineFollower_color == 'white':
             avoid_wall()
             #check if we are in island for a 180-degree turn
             if counter == 4:
                 turn_180_degrees()
                 # head to island
                 head_to_island()
-        # 2) If on black line but the robot is tilted significantly => unjam
-        elif lineFollower_color == 'black' and float(roll) < -30.0:
-            print("Detected tilt; attempting to unjam.")
-            control.move_backward(int(50 * (unjam_retries + 1)), 500)
-            unjam_retries += 1
         elif distance > 12: #is far from the wall
             get_closer_to_wall()
         elif distance < 7: #is too close to the wall
             get_further_from_wall()
         else:
-            control.forward_non_stop(20)
-            print("Moving forward at speed 20.")
-            control.forward_non_stop(20)
-
-        # Reset unjam if we have done a couple attempts and robot is level
-        if unjam_retries >= 2 and float(roll) > -5.0:
-            print("Resetting unjam attempts.")
-            unjam_retries = 0
+            control.forward_non_stop(30)
+            print("Moving forward at speed 30.", end="", flush=True)
 
         # Small delay
-        sleep(0.05)
+        sleep(0.2)
 
 
 # Entry point
 if __name__ == "__main__":
     main()
+
