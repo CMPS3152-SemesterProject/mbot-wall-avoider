@@ -29,6 +29,7 @@ control = EncoderController(board, 1, 2)
 # -------------------------
 #   Global Variables
 # -------------------------
+initial_turn = False
 lineFollower_color = 'black'  # Default color
 distance = 0
 distance_left = 0
@@ -52,10 +53,10 @@ def get_code(value):
     if int(value) > 0:
         board.set_tone(300, 500)
         lineFollower_color = 'white'
-        distance_left = 20
+        distance_left = 0
     else:
         lineFollower_color = 'black'
-        distance_left = 0
+        distance_left = 20
 
 
 def get_distance(value):
@@ -107,7 +108,8 @@ def turn_90_left(speed, is_left):
 
 
 def main():
-    global lineFollower_color, ultrasonicSensor, distance, SPEED, distance_left, distance_right, unjam_retries
+    global lineFollower_color, ultrasonicSensor, distance, SPEED, \
+        distance_left, distance_right, unjam_retries, initial_turn
     roll = board.get_roll()
 
     print(f"Distance: {distance}")
@@ -118,6 +120,13 @@ def main():
 
     if lineFollower_color == 'white' and (distance == 0 or distance == 400):
         control.push_forward(SPEED)
+    elif distance_left == 20 and initial_turn is False:
+        control.push_forward(SPEED)
+        sleep(1)
+        control.stop()
+        turn_90_left(SPEED, "left")
+        control.move_forward(SPEED, 500)
+        initial_turn = True
     # If on black line but the robot is tilted significantly => unjam
     elif lineFollower_color == 'black' and float(roll) < -30.0:
         print("Detected tilt; attempting to unjam.")
