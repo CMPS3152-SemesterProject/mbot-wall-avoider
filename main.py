@@ -48,14 +48,14 @@ def get_code(value):
     :return: The color of the line follower sensor
     """
     global lineFollower_color
-    global distance_right
+    global distance_left
     if int(value) > 0:
         board.set_tone(300, 500)
         lineFollower_color = 'white'
-        distance_right = 20
+        distance_left = 20
     else:
         lineFollower_color = 'black'
-        distance_right = 0
+        distance_left = 0
 
 
 def get_distance(value):
@@ -116,8 +116,10 @@ def main():
     print(f"Color: {lineFollower_color}")
     print(f"Roll: {roll}")
 
+    if lineFollower_color == 'white' and (distance == 0 or distance == 400):
+        control.push_forward(SPEED)
     # If on black line but the robot is tilted significantly => unjam
-    if lineFollower_color == 'black' and float(roll) < -30.0:
+    elif lineFollower_color == 'black' and float(roll) < -30.0:
         print("Detected tilt; attempting to unjam.")
         control.move_backward(int(50 * (unjam_retries + 1)), 500)
         unjam_retries += 1
