@@ -37,7 +37,7 @@ distance_left = 0
 distance_right = 0
 unjam_retries = 0
 SPEED = 60
-OPTIMISTIC = False
+OPTIMISTIC = True
 # Dictionary to store the map
 maze_map = {}  # Key: (x, y) tuple, Value: Cell state (1 = open, -1 = wall, 0 = unexplored)
 # Initialize starting point
@@ -215,18 +215,20 @@ def main():
             turn_90_left(SPEED, is_left="none")
             sleep(0.05)
             turn_90_left(SPEED, is_left="none")
-        current_position = (x, y)
-        if current_position not in maze_map:
-            maze_map[current_position] = 0  # Mark as unexplored
         sleep(0.5)
+
+    current_position = (x, y)
+    print(f"Current position: {x}, {y}")
+    if current_position not in maze_map:
+        maze_map[current_position] = 0  # Mark as unexplored
 
 
 # Entrypoint
 # Initialize plot
-fig, ax = initialize_plot()
 
 # Entrypoint
 def entry_point():
+    fig, ax = initialize_plot()
     board.set_tone(50, 500)
     ultrasonicSensor.read(get_distance)
     lineFollower.read(get_code)
