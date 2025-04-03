@@ -188,7 +188,6 @@ def main():
                 print("Already facing RIGHT, moving forward.")
                 control.push_forward(SPEED)
             else:
-                sleep(10)
                 print("Turning RIGHT (More space to the right)")
                 turn_90_left(speed=(SPEED * -1), is_left="none")
         else:
