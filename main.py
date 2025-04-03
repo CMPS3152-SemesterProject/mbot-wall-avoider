@@ -37,6 +37,7 @@ distance_right = 0
 unjam_retries = 0
 SPEED = 60
 OPTIMISTIC = False
+bot_is_facing = "FORWARD"  # Default direction
 
 
 # -------------------------
@@ -94,13 +95,29 @@ def turn_90_left(speed, is_left):
         timeout = (speed * -1)
     else:
         timeout = speed
-    control.sharp_left(speed, int(330 * (120 / timeout)))
+    control.sharp_left(speed, int(320 * (120 / timeout)))
     if is_left == "left":
-        sleep(1)
+        ultrasonicSensor.read(get_distance)
         distance_left = distance
     elif is_left == "right":
-        sleep(1)
+        ultrasonicSensor.read(get_distance)
         distance_right = distance
+
+
+def update_bot_position(position):
+    """
+    Update the bot's position based on the given direction.
+    :param position: The direction to update the bot's position
+    """
+    global bot_is_facing
+    if position == "FORWARD":
+        bot_is_facing = "FORWARD"
+    elif position == "BACKWARD":
+        bot_is_facing = "BACKWARD"
+    elif position == "LEFT":
+        bot_is_facing = "LEFT"
+    elif position == "RIGHT":
+        bot_is_facing = "RIGHT"
 
 # -------------------------
 #   Main Loop
@@ -138,30 +155,49 @@ def main():
         control.stop()
         sleep(0.5)
 
-        # Measure distance to the left
-        turn_90_left(speed=SPEED, is_left="left")
+        # Measure distance to the right
+        turn_90_left(speed=(SPEED * -1), is_left="right")
+        update_bot_position("RIGHT")
         sleep(0.5)
 
         # Reset to original position
         turn_90_left(speed=(SPEED * -1), is_left="none")
         sleep(0.5)
+        update_bot_position("BACKWARD")
 
-        # Measure distance to the right
-        turn_90_left(speed=(SPEED * -1), is_left="right")
-
+        # Measure distance to the left
+        turn_90_left(speed=SPEED, is_left="left")
+        update_bot_position("LEFT")
         sleep(0.5)
+        print("========================================================")
+        print(f"Distance: {distance}")
+        print(f"Distance Left: {distance_left}")
+        print(f"Distance Right: {distance_right}")
+        print(f"Color: {lineFollower_color}")
+        print(f"Roll: {roll}")
         # Compare left and right distances to decide the direction
         if distance_left > distance_right:
-            print("Turning LEFT (More space to the left)")
-            control.sharp_left(SPEED, 1000)  # Adjust the turning time if necessary
+            if bot_is_facing == "LEFT":
+                print("Already facing LEFT, moving forward.")
+                control.push_forward(SPEED)
+            else:
+                print("Turning LEFT (More space to the left)")
+                turn_90_left(speed=SPEED, is_left="none")
         elif distance_right > distance_left:
-            print("Turning RIGHT (More space to the right)")
-            control.sharp_right(SPEED, 1000)  # Adjust the turning time if necessary
+            if bot_is_facing == "RIGHT":
+                print("Already facing RIGHT, moving forward.")
+                control.push_forward(SPEED)
+            else:
+                sleep(10)
+                print("Turning RIGHT (More space to the right)")
+                turn_90_left(speed=(SPEED * -1), is_left="none")
         else:
             print("Distances are equal or unclear, turning around.")
             turn_90_left(SPEED, is_left="none")
+            update_bot_position("LEFT")
             sleep(0.05)
             turn_90_left(SPEED, is_left="none")
+            update_bot_position("LEFT")
 
         sleep(0.5)
 
