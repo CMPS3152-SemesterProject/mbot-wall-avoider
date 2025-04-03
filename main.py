@@ -53,10 +53,10 @@ def get_code(value):
     if int(value) > 0:
         board.set_tone(300, 500)
         lineFollower_color = 'white'
-        distance_left = 0
+        # distance_left = 0
     else:
         lineFollower_color = 'black'
-        distance_left = 20
+        # distance_left = 20
 
 
 def get_distance(value):
@@ -118,17 +118,17 @@ def main():
     print(f"Color: {lineFollower_color}")
     print(f"Roll: {roll}")
 
-    if lineFollower_color == 'white' and (distance == 0 or distance == 400):
-        control.push_forward(SPEED)
-    elif distance_left == 20 and initial_turn is False:
-        control.push_forward(SPEED)
-        sleep(1)
-        control.stop()
-        turn_90_left(SPEED, "left")
-        control.move_forward(SPEED, 500)
-        initial_turn = True
+    # if lineFollower_color == 'white' and (distance == 0 or distance == 400):
+    #     control.push_forward(SPEED)
+    # elif distance_left == 20 and initial_turn is False:
+    #     control.push_forward(SPEED)
+    #     sleep(1)
+    #     control.stop()
+    #     turn_90_left(SPEED, "left")
+    #     control.move_forward(SPEED, 500)
+    #     initial_turn = True
     # If on black line but the robot is tilted significantly => unjam
-    elif lineFollower_color == 'black' and float(roll) < -30.0:
+    if lineFollower_color == 'black' and float(roll) < -30.0:
         print("Detected tilt; attempting to unjam.")
         control.move_backward(int(50 * (unjam_retries + 1)), 500)
         unjam_retries += 1
@@ -140,9 +140,11 @@ def main():
 
         # Measure distance to the left
         turn_90_left(speed=SPEED, is_left="left")
+        sleep(0.5)
 
         # Reset to original position
         turn_90_left(speed=(SPEED * -1), is_left="none")
+        sleep(0.5)
 
         # Measure distance to the right
         turn_90_left(speed=(SPEED * -1), is_left="right")
