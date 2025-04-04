@@ -96,11 +96,10 @@ def turn_90_left(speed, is_left):
     else:
         timeout = speed
     control.sharp_left(speed, int(320 * (120 / timeout)))
+    ultrasonicSensor.read(get_distance)
     if is_left == "left":
-        ultrasonicSensor.read(get_distance)
         distance_left = distance
-    elif is_left == "right":
-        ultrasonicSensor.read(get_distance)
+    if is_left == "right":
         distance_right = distance
 
 
@@ -129,12 +128,6 @@ def main():
         distance_left, distance_right, unjam_retries, initial_turn
     roll = board.get_roll()
 
-    print(f"Distance: {distance}")
-    print(f"Distance Left: {distance_left}")
-    print(f"Distance Right: {distance_right}")
-    print(f"Color: {lineFollower_color}")
-    print(f"Roll: {roll}")
-
     # if lineFollower_color == 'white' and (distance == 0 or distance == 400):
     #     control.push_forward(SPEED)
     # elif distance_left == 20 and initial_turn is False:
@@ -160,16 +153,29 @@ def main():
         update_bot_position("RIGHT")
         sleep(0.5)
 
+        print("RIGHT=======================================================")
+        print(f"Distance: {distance}")
+        print(f"Distance Left: {distance_left}")
+        print(f"Distance Right: {distance_right}")
+        print(f"Color: {lineFollower_color}")
+        print(f"Roll: {roll}")
+
         # Reset to original position
-        turn_90_left(speed=(SPEED * -1), is_left="none")
+        turn_90_left(speed=SPEED, is_left="none")
+        update_bot_position("FORWARD")
         sleep(0.5)
-        update_bot_position("BACKWARD")
 
         # Measure distance to the left
         turn_90_left(speed=SPEED, is_left="left")
         update_bot_position("LEFT")
         sleep(0.5)
-        print("========================================================")
+
+        # Reset to original position
+        turn_90_left(speed=(SPEED * -1), is_left="none")
+        update_bot_position("FORWARD")
+        sleep(0.5)
+
+        print("FINAL=======================================================")
         print(f"Distance: {distance}")
         print(f"Distance Left: {distance_left}")
         print(f"Distance Right: {distance_right}")
