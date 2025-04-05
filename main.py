@@ -17,9 +17,11 @@ board = MeAuriga.connect(BLE=True)
 # -------------------------
 #   Sensor Setup
 # -------------------------
+LINEFOLLOWER_PORT = 6
+ULTRASONIC_PORT = 7
 # Double-check the physical ports on your robot:
-lineFollower = LineFollower(board, port=6)
-ultrasonicSensor = Ultrasonic(board, port=7)
+lineFollower = LineFollower(board, port=LINEFOLLOWER_PORT)
+ultrasonicSensor = Ultrasonic(board, port=ULTRASONIC_PORT)
 
 # -------------------------
 #   Motor / Controller
@@ -89,6 +91,7 @@ def turn_360(speed):
 
 
 def turn_90_left(speed, is_left):
+    global distance
     global distance_left
     global distance_right
     if int(speed) < 0:
@@ -96,7 +99,7 @@ def turn_90_left(speed, is_left):
     else:
         timeout = speed
     control.sharp_left(speed, int(320 * (120 / timeout)))
-    ultrasonicSensor.read(get_distance)
+    distance = ultrasonicSensor.get_distance(port=ULTRASONIC_PORT)
     if is_left == "left":
         distance_left = distance
     if is_left == "right":
