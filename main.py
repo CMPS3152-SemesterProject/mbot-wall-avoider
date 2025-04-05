@@ -62,14 +62,14 @@ def get_code(value):
         # distance_left = 20
 
 
-def get_distance(value):
+def get_distance():
     """
     Get the distance from the ultrasonic sensor
-    :param value: Raw value from the sensor
     :return: Value of the distance
     """
     global distance
-    if distance == 400:
+    value = ultrasonicSensor.get_distance(port=ULTRASONIC_PORT)
+    if value == 400:
         if OPTIMISTIC:  # If the distance is 400, we are searching optimistically
             distance = value
         else:
@@ -91,7 +91,6 @@ def turn_360(speed):
 
 
 def turn_90_left(speed, is_left):
-    global distance
     global distance_left
     global distance_right
     if int(speed) < 0:
@@ -99,7 +98,7 @@ def turn_90_left(speed, is_left):
     else:
         timeout = speed
     control.sharp_left(speed, int(320 * (120 / timeout)))
-    distance = ultrasonicSensor.get_distance(port=ULTRASONIC_PORT)
+    get_distance()  # Get ultrasonic distance
     if is_left == "left":
         distance_left = distance
     if is_left == "right":
@@ -213,12 +212,12 @@ def main():
 # Entrypoint
 def entry_point():
     board.set_tone(50, 500)
-    ultrasonicSensor.read(get_distance)
+    get_distance()
     lineFollower.read(get_code)
     sleep(3)
     board.set_tone(100, 300)
     while True:
-        ultrasonicSensor.read(get_distance)
+        get_distance()
         lineFollower.read(get_code)
         main()
         sleep(0.05)  # Minimum sleep time for maximum responsiveness
