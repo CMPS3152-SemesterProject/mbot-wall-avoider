@@ -41,7 +41,7 @@ unjam_retries = 0
 SPEED = 60
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
-memory = ["FORWARD", 58, "RIGHT", 20, "RIGHT", 13, "LEFT", 8, "LEFT", 103]
+memory = ["FORWARD", 0, "FORWARD", 58, "RIGHT", "FORWARD", 20, "RIGHT", "FORWARD", 13, "LEFT", "FORWARD", 8, "LEFT", "FORWARD", 103]
 
 
 # -------------------------
@@ -295,4 +295,8 @@ def entry_point():
     board.set_tone(100, 300)
     while True:
         play_memory()
+        exit(0)
+        get_distance()
+        lineFollower.read(get_code)
+        main()
         sleep(0.05)  # Minimum sleep time for maximum responsiveness
