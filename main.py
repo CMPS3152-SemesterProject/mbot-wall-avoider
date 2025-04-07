@@ -149,7 +149,7 @@ def play_memory(checkpoint_n=0):
         # Reverse offset: going back from the end of the memory
         len_memory = len(checkpoints) - 1 - checkpoint_n
         if 0 <= len_memory < len(checkpoints):
-            len_memory = checkpoints[len_memory]
+            len_memory = checkpoints[len_memory] + 1
             print(f"Playing memory from checkpoint {checkpoint_n} (index {len_memory})", flush=True)
             # Pop off everything after the checkpoint
             while len(memory) > len_memory:
