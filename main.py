@@ -42,8 +42,8 @@ SPEED = 60
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
 memory = ["FORWARD", 0, "FORWARD", 58, "RIGHT", "FORWARD", 20, "RIGHT", "FORWARD", 13, "LEFT", "FORWARD", 8, "LEFT", "FORWARD", 103]
-# Checkpoints are
-checkpoints = [1, 3, 6, 9, 12, 15]
+# Checkpoints are the indices of the memory list where the bot has turned
+checkpoints = [i + 1 for i in range(len(memory)) if memory[i] == "FORWARD"]
 
 # -------------------------
 #   Functions
@@ -197,7 +197,7 @@ def memory_rollback_by_checkpoint_n(n):
     global memory
     if len(memory) > 0 and isinstance(memory[-1], int):
         # Play the last n checkpoints
-        play_memory(2)
+        play_memory(n)
         memory.pop()
         print(f"Rolled back {n} checkpoints", flush=True)
     else:
