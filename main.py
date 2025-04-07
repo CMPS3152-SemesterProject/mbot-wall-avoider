@@ -42,7 +42,8 @@ SPEED = 60
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
 memory = ["FORWARD", 0, "FORWARD", 58, "RIGHT", "FORWARD", 20, "RIGHT", "FORWARD", 13, "LEFT", "FORWARD", 8, "LEFT", "FORWARD", 103]
-
+# Checkpoints are
+checkpoints = [1, 3, 6, 9, 12, 15]
 
 # -------------------------
 #   Functions
@@ -137,13 +138,25 @@ def display_memory():
     print("End of Memory", flush=True)
 
 
-def play_memory():
+def play_memory(checkpoint_n=0):
     """
     Play the memory of the bot.
     """
     global memory
     i = 0
-    while i < len(memory):
+    len_memory = len(memory)
+    if checkpoint_n > 0:
+        # Reverse offset: going back from the end of the memory
+        len_memory = len(checkpoints) - 1 - checkpoint_n
+        if 0 <= len_memory < len(checkpoints):
+            len_memory = checkpoints[len_memory]
+            print(f"Playing memory from checkpoint {checkpoint_n} (index {len_memory})", flush=True)
+            # Pop off everything after the checkpoint
+            while len(memory) > len_memory:
+                memory.pop()
+        else:
+            raise ValueError("checkpoint_N is out of bounds for reverse indexing.")
+    while i < len_memory:
         item = memory[i]
         print(f"  {i}: {item}", flush=True)
 
@@ -170,8 +183,25 @@ def play_memory():
 
         i += 1
 
-    print("End of Memory", flush=True)
+    if checkpoint_n != 0:
+        print("End of Checkpoint", flush=True)
+    else:
+        print("End of Memory", flush=True)
 
+
+def memory_rollback_by_checkpoint_n(n):
+    """
+    Rollback the memory by n checkpoints.
+    :param n: Number of checkpoints to rollback
+    """
+    global memory
+    if len(memory) > 0 and isinstance(memory[-1], int):
+        # Play the last n checkpoints
+        play_memory(2)
+        memory.pop()
+        print(f"Rolled back {n} checkpoints", flush=True)
+    else:
+        print("No memory to rollback", flush=True)
 
 # -------------------------
 #   Main Loop
@@ -279,9 +309,11 @@ def main():
             sleep(0.05)
             turn_90_left(SPEED, is_left="none")
             update_bot_position("LEFT")
-            # Check if memory is not empty and last element is an integer
+            # Rollback memory by 1
             if len(memory) > 0 and isinstance(memory[-1], int):
-                memory.append("BACKWARD")
+                memory_rollback_by_checkpoint_n(1)
+            else:
+                print("No memory to rollback.")
 
         sleep(0.5)
 
@@ -294,9 +326,8 @@ def entry_point():
     sleep(3)
     board.set_tone(100, 300)
     while True:
-        play_memory()
+        play_memory(2)
         exit(0)
-        get_distance()
         lineFollower.read(get_code)
         main()
         sleep(0.05)  # Minimum sleep time for maximum responsiveness
