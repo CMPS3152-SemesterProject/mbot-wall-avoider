@@ -41,6 +41,7 @@ unjam_retries = 0
 SPEED = 60
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
+memory = ["FORWARD", 58, "RIGHT", 20, "RIGHT", 13, "LEFT", 8, "LEFT", 103]
 
 
 # -------------------------
@@ -121,6 +122,57 @@ def update_bot_position(position):
     elif position == "RIGHT":
         bot_is_facing = "RIGHT"
 
+
+def display_memory():
+    """
+    Display the memory of the bot.
+    """
+    global memory
+    print("Memory:", flush=True)
+    for i in range(len(memory)):
+        if isinstance(memory[i], str):
+            print(f"  {i}: {memory[i]}", flush=True)
+        else:
+            print(f"  {i}: {memory[i]}", flush=True)
+    print("End of Memory", flush=True)
+
+
+def play_memory():
+    """
+    Play the memory of the bot.
+    """
+    global memory
+    i = 0
+    while i < len(memory):
+        item = memory[i]
+        print(f"  {i}: {item}", flush=True)
+
+        if isinstance(item, str):
+            if item == "FORWARD":
+                if i + 1 < len(memory) and isinstance(memory[i + 1], int):
+                    for _ in range(memory[i + 1]):
+                        control.push_forward(SPEED)
+                    print(f"    Executed FORWARD {memory[i + 1]} times", flush=True)
+                    i += 2
+                    continue
+                else:
+                    print("    ERROR: FORWARD not followed by an integer", flush=True)
+            elif item == "LEFT":
+                turn_90_left(speed=SPEED, is_left="none")
+            elif item == "RIGHT":
+                turn_90_left(speed=(SPEED * -1), is_left="none")
+            elif item == "BACKWARD":
+                control.move_backward(SPEED, 500)
+            else:
+                print(f"    WARNING: Unknown command '{item}'", flush=True)
+        elif isinstance(item, int):
+            print("    ERROR: Unexpected integer without preceding FORWARD", flush=True)
+
+        i += 1
+
+    print("End of Memory", flush=True)
+
+
 # -------------------------
 #   Main Loop
 # -------------------------
@@ -128,7 +180,7 @@ def update_bot_position(position):
 
 def main():
     global lineFollower_color, ultrasonicSensor, distance, SPEED, \
-        distance_left, distance_right, unjam_retries, initial_turn
+        distance_left, distance_right, unjam_retries, initial_turn, memory
     roll = board.get_roll()
 
     # if lineFollower_color == 'white' and (distance == 0 or distance == 400):
@@ -147,6 +199,15 @@ def main():
         unjam_retries += 1
     elif distance > DISTANCE_THRESHOLD:
         control.push_forward(SPEED)
+        # Check if memory is not empty and last element is a string
+        if len(memory) > 0 and isinstance(memory[-1], str):
+            memory.append("FORWARD")
+            memory.append(0)
+        # If memory has at least two elements and the second last is a string
+        elif len(memory) > 1 and isinstance(memory[-2], str) and isinstance(memory[-1], int):
+            memory[-1] += 1
+        else:
+            memory.append("FORWARD")
     else:
         control.stop()
         sleep(0.5)
@@ -189,16 +250,28 @@ def main():
             if bot_is_facing == "LEFT":
                 print("Already facing LEFT, moving forward.")
                 control.push_forward(SPEED)
+                # Check if memory is not empty and last element is an integer
+                if len(memory) > 0 and isinstance(memory[-1], int):
+                    memory.append("LEFT")
             else:
                 print("Turning LEFT (More space to the left)")
                 turn_90_left(speed=SPEED, is_left="none")
+                # Check if memory is not empty and last element is an integer
+                if len(memory) > 0 and isinstance(memory[-1], int):
+                    memory.append("LEFT")
         elif distance_right > distance_left:
             if bot_is_facing == "RIGHT":
                 print("Already facing RIGHT, moving forward.")
                 control.push_forward(SPEED)
+                # Check if memory is not empty and last element is an integer
+                if len(memory) > 0 and isinstance(memory[-1], int):
+                    memory.append("RIGHT")
             else:
                 print("Turning RIGHT (More space to the right)")
                 turn_90_left(speed=(SPEED * -1), is_left="none")
+                # Check if memory is not empty and last element is an integer
+                if len(memory) > 0 and isinstance(memory[-1], int):
+                    memory.append("RIGHT")
         else:
             print("Distances are equal or unclear, turning around.")
             turn_90_left(SPEED, is_left="none")
@@ -206,6 +279,9 @@ def main():
             sleep(0.05)
             turn_90_left(SPEED, is_left="none")
             update_bot_position("LEFT")
+            # Check if memory is not empty and last element is an integer
+            if len(memory) > 0 and isinstance(memory[-1], int):
+                memory.append("BACKWARD")
 
         sleep(0.5)
 
@@ -218,7 +294,5 @@ def entry_point():
     sleep(3)
     board.set_tone(100, 300)
     while True:
-        get_distance()
-        lineFollower.read(get_code)
-        main()
+        play_memory()
         sleep(0.05)  # Minimum sleep time for maximum responsiveness
