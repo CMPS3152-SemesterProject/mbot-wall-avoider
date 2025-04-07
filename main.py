@@ -35,8 +35,6 @@ control = EncoderController(board, 1, 2)
 initial_turn = False
 lineFollower_color = 'black'  # Default color
 distance = 0
-distance_left = 0
-distance_right = 0
 unjam_retries = 0
 SPEED = 60
 OPTIMISTIC = False
@@ -227,7 +225,7 @@ def main():
         print("Detected tilt; attempting to unjam.")
         control.move_backward(int(50 * (unjam_retries + 1)), 500)
         unjam_retries += 1
-    elif distance > DISTANCE_THRESHOLD:
+    elif lineFollower_color == 'white':
         control.push_forward(SPEED)
         # Check if memory is not empty and last element is a string
         if len(memory) > 0 and isinstance(memory[-1], str):
@@ -241,81 +239,7 @@ def main():
     else:
         control.stop()
         sleep(0.5)
-
-        # Measure distance to the right
-        turn_90_left(speed=(SPEED * -1), is_left="right")
-        update_bot_position("RIGHT")
-        sleep(0.5)
-
-        print("RIGHT=======================================================")
-        print(f"Distance: {distance}")
-        print(f"Distance Left: {distance_left}")
-        print(f"Distance Right: {distance_right}")
-        print(f"Color: {lineFollower_color}")
-        print(f"Roll: {roll}")
-
-        # Reset to original position
-        turn_90_left(speed=SPEED, is_left="none")
-        update_bot_position("FORWARD")
-        sleep(0.5)
-
-        # Measure distance to the left
-        turn_90_left(speed=SPEED, is_left="left")
-        update_bot_position("LEFT")
-        sleep(0.5)
-
-        # Reset to original position
-        turn_90_left(speed=(SPEED * -1), is_left="none")
-        update_bot_position("FORWARD")
-        sleep(0.5)
-
-        print("FINAL=======================================================")
-        print(f"Distance: {distance}")
-        print(f"Distance Left: {distance_left}")
-        print(f"Distance Right: {distance_right}")
-        print(f"Color: {lineFollower_color}")
-        print(f"Roll: {roll}")
-        # Compare left and right distances to decide the direction
-        if distance_left > distance_right:
-            if bot_is_facing == "LEFT":
-                print("Already facing LEFT, moving forward.")
-                control.push_forward(SPEED)
-                # Check if memory is not empty and last element is an integer
-                if len(memory) > 0 and isinstance(memory[-1], int):
-                    memory.append("LEFT")
-            else:
-                print("Turning LEFT (More space to the left)")
-                turn_90_left(speed=SPEED, is_left="none")
-                # Check if memory is not empty and last element is an integer
-                if len(memory) > 0 and isinstance(memory[-1], int):
-                    memory.append("LEFT")
-        elif distance_right > distance_left:
-            if bot_is_facing == "RIGHT":
-                print("Already facing RIGHT, moving forward.")
-                control.push_forward(SPEED)
-                # Check if memory is not empty and last element is an integer
-                if len(memory) > 0 and isinstance(memory[-1], int):
-                    memory.append("RIGHT")
-            else:
-                print("Turning RIGHT (More space to the right)")
-                turn_90_left(speed=(SPEED * -1), is_left="none")
-                # Check if memory is not empty and last element is an integer
-                if len(memory) > 0 and isinstance(memory[-1], int):
-                    memory.append("RIGHT")
-        else:
-            print("Distances are equal or unclear, turning around.")
-            turn_90_left(SPEED, is_left="none")
-            update_bot_position("LEFT")
-            sleep(0.05)
-            turn_90_left(SPEED, is_left="none")
-            update_bot_position("LEFT")
-            # Rollback memory by 1
-            if len(memory) > 0 and isinstance(memory[-1], int):
-                memory_rollback_by_checkpoint_n(1)
-                control.stop()
-            else:
-                print("No memory to rollback.")
-
+        # Code in here
         sleep(0.5)
 
 
