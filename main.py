@@ -22,6 +22,7 @@ ULTRASONIC_PORT = 7
 # Double-check the physical ports on your robot:
 lineFollower = LineFollower(board, port=LINEFOLLOWER_PORT)
 ultrasonicSensor = Ultrasonic(board, port=ULTRASONIC_PORT)
+DISTANCE_THRESHOLD = 15
 
 # -------------------------
 #   Motor / Controller
@@ -144,7 +145,7 @@ def main():
         print("Detected tilt; attempting to unjam.")
         control.move_backward(int(50 * (unjam_retries + 1)), 500)
         unjam_retries += 1
-    elif distance > 15:
+    elif distance > DISTANCE_THRESHOLD:
         control.push_forward(SPEED)
     else:
         control.stop()
