@@ -41,7 +41,7 @@ unjam_retries = 0
 SPEED = 60
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
-memory = ["FORWARD", 0, "FORWARD", 58, "RIGHT", "FORWARD", 20, "RIGHT", "FORWARD", 13, "LEFT", "FORWARD", 8, "LEFT", "FORWARD", 103]
+memory = ["FORWARD", 0]
 # Checkpoints are the indices of the memory list where the bot has turned
 checkpoints = [i + 1 for i in range(len(memory)) if memory[i] == "FORWARD"]
 
@@ -312,6 +312,7 @@ def main():
             # Rollback memory by 1
             if len(memory) > 0 and isinstance(memory[-1], int):
                 memory_rollback_by_checkpoint_n(1)
+                control.stop()
             else:
                 print("No memory to rollback.")
 
@@ -326,8 +327,6 @@ def entry_point():
     sleep(3)
     board.set_tone(100, 300)
     while True:
-        play_memory(2)
-        exit(0)
         lineFollower.read(get_code)
         main()
         sleep(0.05)  # Minimum sleep time for maximum responsiveness
