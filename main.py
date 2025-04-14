@@ -41,6 +41,7 @@ def set_color(value): #set color of line follower
     else:
         lineFollower_color = 'black'
 
+
 def head_to_island(): #head to island function
 
     global lineFollower_color
