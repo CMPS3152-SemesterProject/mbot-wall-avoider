@@ -41,7 +41,7 @@ unjam_retries = 0
 loop_detection_counter = 1
 inside_inner_island = False
 may_need_harder_turn = False
-SPEED = 30
+SPEED = 70
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
 memory = ["FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT"]  # Note: 13 steps @125ms @SPEED=60 is ~1 ft.
@@ -69,20 +69,20 @@ def get_linefollower_code():
                 memory.append("LEFT")
             print_flush("Wall encountered. Making right turn.")
             control.stop()  # stop when front wall is hit or too close
-            control.move_backward(SPEED, 2000)  # Move back a bit
+            control.move_backward(SPEED, 1000)  # Move back a bit
             # Turn left 90 degrees
             turn_90_left(SPEED, "left")
-            turn_90_left(SPEED, "left")
+            # turn_90_left(SPEED, "left")
             may_need_harder_turn = True
             loop_detection_counter += 1
             # Reset the unjam retries
             unjam_retries = 0
-            if loop_detection_counter == 4 and inside_inner_island is False:
-                print_flush("Loop detected. Adjusting.")
-                print_flush("Making 180deg turn.")
-                turn_90_left(SPEED, "left")
-                turn_90_left(SPEED, "left")
-                inside_inner_island = True
+            # if loop_detection_counter == 4 and inside_inner_island is False:
+            #     print_flush("Loop detected. Adjusting.")
+            #     print_flush("Making 180deg turn.")
+            #     turn_90_left(SPEED, "left")
+            #     turn_90_left(SPEED, "left")
+            #     inside_inner_island = True
                 # Ideally, put a function below. But for now, just a placeholder.
             # distance_left = 0
     else:
@@ -306,22 +306,6 @@ def main():
         # play_memory(checkpoint_n=0)
         # But for now we will just exit
         exit(1)  # Placeholder
-    if distance_left > DISTANCE_THRESHOLD:
-        print_flush("Left distance is too far. Adjusting.")
-        # Slight right turn
-        control.encoder_left.run(22)
-        control.encoder_right.run(-13)
-        if may_need_harder_turn:
-            sleep(0.75)
-        else:
-            sleep(0.25)
-    if distance_left < (DISTANCE_THRESHOLD - 2):
-        print_flush("Left distance is too close. Adjusting.")
-        may_need_harder_turn = False
-        # Slight left turn
-        control.encoder_left.run(13)
-        control.encoder_right.run(-22)
-        sleep(0.5)
     # If memory has at least two elements and the second last is a string
     if len(memory) > 1 and isinstance(memory[-2], str) and isinstance(memory[-1], int):
         if len(memory) < 0:
@@ -340,7 +324,7 @@ def main():
         else:
             memory.append("FORWARD")
     # Move forward
-    control.push_forward(SPEED)
+    control.lock(distance, DISTANCE_THRESHOLD, SPEED)
     sleep(0.05)  # [FAST]: Appropriate clock time for the bot to move
 
 
