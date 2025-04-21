@@ -35,13 +35,15 @@ control = EncoderController(board, 1, 2)
 initial_turn = False
 lineFollower_color = 'black'  # Default color
 distance = 0
+distance_left = 0
+distance_right = 0
 unjam_retries = 0
 SPEED = 60
 OPTIMISTIC = False
-# bot_is_facing = "FORWARD"  # Default direction
+bot_is_facing = "FORWARD"  # Default direction
 memory = ["FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", 13]  # Note: 13 steps @125ms @SPEED=60 is ~1 ft.
 # Checkpoints are the indices of the memory list where the bot has turned
-memory = ["FORWARD"]
+# memory = ["FORWARD"]
 checkpoints = [i + 1 for i in range(len(memory)) if memory[i] == "FORWARD"]
 
 # -------------------------
@@ -120,13 +122,19 @@ def update_bot_position(position):
         bot_is_facing = "RIGHT"
 
 
-def turn_90_left(speed):
+def turn_90_left(speed, is_left):
+    global distance_left
+    global distance_right
     if int(speed) < 0:
         timeout = (speed * -1)
     else:
         timeout = speed
     control.sharp_left(speed, int(320 * (120 / timeout)))
     get_distance()  # Get ultrasonic distance
+    if is_left == "left":
+        distance_left = distance
+    if is_left == "right":
+        distance_right = distance
 
 
 def display_memory():
@@ -142,6 +150,15 @@ def display_memory():
             print(f"  {i}: {memory[i]}", flush=True)
     print("End of Memory", flush=True)
 
+def display_checkpoints():
+    """
+    Display the checkpoints of the bot.
+    """
+    global checkpoints
+    print("Checkpoints:", flush=True)
+    for i in range(len(checkpoints)):
+        print(f"  {i}: {checkpoints[i]}", flush=True)
+    print("End of Checkpoints", flush=True)
 
 def play_memory(checkpoint_n=0):
     """
@@ -247,6 +264,8 @@ def main():
                 control.stop()
                 print("Current memory")
                 display_memory()
+                print("Current checkpoints")
+                display_checkpoints()
                 sleep(5)
                 play_memory()
                 control.stop()
