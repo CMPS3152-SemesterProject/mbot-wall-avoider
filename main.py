@@ -40,6 +40,7 @@ distance_right = 0
 unjam_retries = 0
 loop_detection_counter = 1
 inside_inner_island = False
+may_need_harder_turn = False
 SPEED = 30
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
@@ -56,7 +57,8 @@ def get_linefollower_code():
     Get the color of the line follower sensor
     :return: The color of the line follower sensor
     """
-    global lineFollower_color, distance_left, inside_inner_island, loop_detection_counter
+    global lineFollower_color, distance_left, inside_inner_island, \
+        loop_detection_counter, may_need_harder_turn
     value = lineFollower.get_status(port=LINEFOLLOWER_PORT)
     if int(value) > 0:
         board.set_tone(300, 500)
@@ -71,6 +73,7 @@ def get_linefollower_code():
             # Turn left 90 degrees
             turn_90_left(SPEED, "left")
             turn_90_left(SPEED, "left")
+            may_need_harder_turn = True
             loop_detection_counter += 1
             # Reset the unjam retries
             unjam_retries = 0
@@ -283,10 +286,12 @@ def memory_rollback_by_checkpoint_n(n):
 def main():
     global lineFollower_color, ultrasonicSensor, distance, SPEED, \
         distance_left, distance_right, unjam_retries, initial_turn, memory, \
-        loop_detection_counter, inside_inner_island
+        loop_detection_counter, inside_inner_island, may_need_harder_turn
     roll = board.get_roll()
     print_flush(f"Roll: {board.get_roll()} {board.get_yaw()} {board.get_pitch()}")
 
+    if float(roll) >= 0.0:
+        unjam_retries = 1
     # If on black line but the robot is tilted significantly => unjam
     if lineFollower_color == 'black' and float(roll) < -30.0:
         print("Detected tilt; attempting to unjam.")
@@ -306,12 +311,17 @@ def main():
         # Slight right turn
         control.encoder_left.run(22)
         control.encoder_right.run(-13)
-        sleep(1.25)
+        if may_need_harder_turn:
+            sleep(0.75)
+        else:
+            sleep(0.25)
     if distance_left < (DISTANCE_THRESHOLD - 2):
         print_flush("Left distance is too close. Adjusting.")
+        may_need_harder_turn = False
         # Slight left turn
         control.encoder_left.run(13)
-        control.encoder_right.run(-16)
+        control.encoder_right.run(-22)
+        sleep(0.5)
     # If memory has at least two elements and the second last is a string
     if len(memory) > 1 and isinstance(memory[-2], str) and isinstance(memory[-1], int):
         if len(memory) < 0:
