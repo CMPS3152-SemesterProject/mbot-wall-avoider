@@ -54,7 +54,7 @@ class EncoderController:
         self.encoder_right.run(0)
         pass
 
-    # Custom functions
+    # Custom functions ---------------------------------------------
     def push_forward(self, speed):
         self.encoder_left.run(speed)
         self.encoder_right.run(speed * -1)
@@ -64,5 +64,9 @@ class EncoderController:
         self.push_forward(speed * -1)
         pass
 
-
-
+    def turn_360(self, speed):
+        if int(speed) < 0:
+            timeout = (speed * -1)
+        else:
+            timeout = speed
+        self.sharp_left(speed, int(1058 * (120 / timeout)))
