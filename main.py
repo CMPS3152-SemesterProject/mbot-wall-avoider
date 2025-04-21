@@ -4,6 +4,7 @@ from EncoderController import EncoderController
 from makeblock.boards import MeAuriga
 from makeblock.modules.rj25 import LineFollower
 from makeblock.modules.rj25 import Ultrasonic
+from Wall import Wall
 from time import sleep
 
 
@@ -38,6 +39,8 @@ distance = 0
 distance_left = 0
 distance_right = 0
 unjam_retries = 0
+loop_detection_counter = 1
+inside_inner_island = False
 SPEED = 60
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
@@ -84,6 +87,14 @@ def get_distance():
 # -------------------------
 #   Prototype Functions
 # -------------------------
+
+
+def print_flush(message):
+    """
+    Print a message and flush the output buffer.
+    :param message: The message to print
+    """
+    print(message, end="\n", flush=True)
 
 
 def virtual_step(steps: float, speed: float, base_speed: float = 60, base_step_count: float = 13):
@@ -247,13 +258,26 @@ def memory_rollback_by_checkpoint_n(n):
         print("No memory to rollback", flush=True)
 
 # -------------------------
+#   Wall Avoidance
+# -------------------------
+
+
+def avoid_wall(counter):
+    control.stop()  # stop when front wall is hit or too close
+    control.move_backward(50, 300)  # Move back a bit
+    # Turn left 90 degrees, might need some tweaking
+    turn_90_left(SPEED, "left")
+    counter += 1
+
+# -------------------------
 #   Main Loop
 # -------------------------
 
 
 def main():
     global lineFollower_color, ultrasonicSensor, distance, SPEED, \
-        distance_left, distance_right, unjam_retries, initial_turn, memory
+        distance_left, distance_right, unjam_retries, initial_turn, memory, \
+        loop_detection_counter, inside_inner_island
     roll = board.get_roll()
 
     # If on black line but the robot is tilted significantly => unjam
@@ -261,38 +285,70 @@ def main():
         print("Detected tilt; attempting to unjam.")
         control.move_backward(int(50 * (unjam_retries + 1)), 500)
         unjam_retries += 1
-    elif lineFollower_color == 'black':
-        control.push_forward(SPEED)
+    elif lineFollower_color == 'white' and inside_inner_island is True:
+        print_flush("Inside inner island. Stopping Motors.")
+        control.stop()
+        sleep(4)
+        print_flush("Replaying memory in reverse.")
+        # todo: Ideally, have another argument to play memory in reverse
+        # play_memory(checkpoint_n=0)
+        # But for now we will just exit
+        exit(1)  # Placeholder
+    elif lineFollower_color == 'white' and inside_inner_island is False:
         # Check if memory is not empty and last element is a string
         if len(memory) > 0 and isinstance(memory[-1], str):
             memory.append("FORWARD")
             memory.append(0)
+        print_flush("Wall encountered. Making right turn.")
+        avoid_wall(loop_detection_counter)
+        # Reset the unjam retries
+        unjam_retries = 0
+        if loop_detection_counter == 4 and inside_inner_island is False:
+            print_flush("Loop detected. Adjusting.")
+            print_flush("Making 180deg turn.")
+            turn_90_left(SPEED, "left")
+            turn_90_left(SPEED, "left")
+            inside_inner_island = True
+            # Ideally, put a function below. But for now, just a placeholder.
+    if distance_left > 11:
+        print_flush("Left distance is too far. Adjusting.")
+        # Slight right turn
+        control.encoder_left.run(22)
+        control.encoder_right.run(-13)
+        sleep(1.25)
+    if distance_left < 7:
+        print_flush("Left distance is too close. Adjusting.")
+        # Slight left turn
+        control.encoder_left.run(13)
+        control.encoder_right.run(-16)
+    if 12 > distance_left > 7:
+        print_flush("Left distance is just right. Continuing.")
+        # Move forward
+        control.push_forward(SPEED)
         # If memory has at least two elements and the second last is a string
-        elif len(memory) > 1 and isinstance(memory[-2], str) and isinstance(memory[-1], int):
+        if len(memory) > 1 and isinstance(memory[-2], str) and isinstance(memory[-1], int):
             if len(memory) < 0:
                 memory[-1] += 1
-            else:
-                control.stop()
-                print("Current memory")
-                display_memory()
-                print("Current checkpoints")
-                display_checkpoints()
-                memory_rollback_by_checkpoint_n(4)
-                sleep(5)
-                play_memory()
-                control.stop()
-                exit(0)
+        # else:
+        #     control.stop()
+        #     print("Current memory")
+        #     display_memory()
+        #     print("Current checkpoints")
+        #     display_checkpoints()
+        #     memory_rollback_by_checkpoint_n(4)
+        #     sleep(5)
+        #     play_memory()
+        #     control.stop()
+        #     exit(0)
         else:
             memory.append("FORWARD")
-    else:
-        control.stop()
-        sleep(0.5)
-        # Code in here
-        sleep(0.5)
+    sleep(0.5)  # Appropriate clock time for the bot to move
 
 
 # Entrypoint
 def entry_point():
+    global distance, lineFollower_color, \
+        loop_detection_counter, inside_inner_island
     board.set_tone(50, 500)
     get_distance()
     lineFollower.read(get_code)
@@ -302,3 +358,9 @@ def entry_point():
         lineFollower.read(get_code)
         main()
         sleep(0.05)  # Minimum sleep time for maximum responsiveness
+        print("\r" + " " * 50, end=" ")  # Clears the line
+        # Add color to the distance and line color, and different colors to their values
+        print(f"\r\033[94mDistance:\033[0m \033[92m{distance}\033[0m "
+              f" | \033[94mLine color:\033[0m \033[92m{lineFollower_color}\033[0m "
+              f"| \033[94mCounter :\033[0m \033[92m{loop_detection_counter}\033[0m "
+              f" | \033[94mInside Island:\033[0m \033[92m{inside_inner_island}\033[0m", end="\n", flush=True)
