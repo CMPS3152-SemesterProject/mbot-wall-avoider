@@ -4,7 +4,6 @@ from EncoderController import EncoderController
 from makeblock.boards import MeAuriga
 from makeblock.modules.rj25 import LineFollower
 from makeblock.modules.rj25 import Ultrasonic
-from Wall import Wall
 from time import sleep
 
 
@@ -23,7 +22,7 @@ ULTRASONIC_PORT = 7
 # Double-check the physical ports on your robot:
 lineFollower = LineFollower(board, port=LINEFOLLOWER_PORT)
 ultrasonicSensor = Ultrasonic(board, port=ULTRASONIC_PORT)
-DISTANCE_THRESHOLD = 15
+DISTANCE_THRESHOLD = 7
 
 # -------------------------
 #   Motor / Controller
@@ -41,7 +40,7 @@ distance_right = 0
 unjam_retries = 0
 loop_detection_counter = 1
 inside_inner_island = False
-SPEED = 60
+SPEED = 30
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
 memory = ["FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT"]  # Note: 13 steps @125ms @SPEED=60 is ~1 ft.
@@ -52,18 +51,36 @@ checkpoints = [i + 1 for i in range(len(memory)) if memory[i] == "FORWARD"]
 # -------------------------
 #   Functions
 # -------------------------
-def get_code(value):
+def get_linefollower_code():
     """
     Get the color of the line follower sensor
-    :param value: Raw value from the sensor
     :return: The color of the line follower sensor
     """
-    global lineFollower_color
-    global distance_left
+    global lineFollower_color, distance_left, inside_inner_island, loop_detection_counter
+    value = lineFollower.get_status(port=LINEFOLLOWER_PORT)
     if int(value) > 0:
         board.set_tone(300, 500)
         lineFollower_color = 'white'
-        # distance_left = 0
+        if inside_inner_island is False:
+            # Check if memory is not empty and last element is a string
+            if len(memory) > 0 and isinstance(memory[-1], str):
+                memory.append("LEFT")
+            print_flush("Wall encountered. Making right turn.")
+            control.stop()  # stop when front wall is hit or too close
+            control.move_backward(SPEED, 2000)  # Move back a bit
+            # Turn left 90 degrees, might need some tweaking
+            turn_90_left(SPEED, "left")
+            loop_detection_counter += 1
+            # Reset the unjam retries
+            unjam_retries = 0
+            if loop_detection_counter == 4 and inside_inner_island is False:
+                print_flush("Loop detected. Adjusting.")
+                print_flush("Making 180deg turn.")
+                turn_90_left(SPEED, "left")
+                turn_90_left(SPEED, "left")
+                inside_inner_island = True
+                # Ideally, put a function below. But for now, just a placeholder.
+            # distance_left = 0
     else:
         lineFollower_color = 'black'
         # distance_left = 20
@@ -258,18 +275,6 @@ def memory_rollback_by_checkpoint_n(n):
         print("No memory to rollback", flush=True)
 
 # -------------------------
-#   Wall Avoidance
-# -------------------------
-
-
-def avoid_wall(counter):
-    control.stop()  # stop when front wall is hit or too close
-    control.move_backward(50, 300)  # Move back a bit
-    # Turn left 90 degrees, might need some tweaking
-    turn_90_left(SPEED, "left")
-    counter += 1
-
-# -------------------------
 #   Main Loop
 # -------------------------
 
@@ -294,41 +299,21 @@ def main():
         # play_memory(checkpoint_n=0)
         # But for now we will just exit
         exit(1)  # Placeholder
-    elif lineFollower_color == 'white' and inside_inner_island is False:
-        # Check if memory is not empty and last element is a string
-        if len(memory) > 0 and isinstance(memory[-1], str):
-            memory.append("FORWARD")
-            memory.append(0)
-        print_flush("Wall encountered. Making right turn.")
-        avoid_wall(loop_detection_counter)
-        # Reset the unjam retries
-        unjam_retries = 0
-        if loop_detection_counter == 4 and inside_inner_island is False:
-            print_flush("Loop detected. Adjusting.")
-            print_flush("Making 180deg turn.")
-            turn_90_left(SPEED, "left")
-            turn_90_left(SPEED, "left")
-            inside_inner_island = True
-            # Ideally, put a function below. But for now, just a placeholder.
-    if distance_left > 11:
+    if distance_left > DISTANCE_THRESHOLD:
         print_flush("Left distance is too far. Adjusting.")
         # Slight right turn
         control.encoder_left.run(22)
         control.encoder_right.run(-13)
         sleep(1.25)
-    if distance_left < 7:
+    if distance_left < (DISTANCE_THRESHOLD - 2):
         print_flush("Left distance is too close. Adjusting.")
         # Slight left turn
         control.encoder_left.run(13)
         control.encoder_right.run(-16)
-    if 12 > distance_left > 7:
-        print_flush("Left distance is just right. Continuing.")
-        # Move forward
-        control.push_forward(SPEED)
-        # If memory has at least two elements and the second last is a string
-        if len(memory) > 1 and isinstance(memory[-2], str) and isinstance(memory[-1], int):
-            if len(memory) < 0:
-                memory[-1] += 1
+    # If memory has at least two elements and the second last is a string
+    if len(memory) > 1 and isinstance(memory[-2], str) and isinstance(memory[-1], int):
+        if len(memory) < 0:
+            memory[-1] += 1
         # else:
         #     control.stop()
         #     print("Current memory")
@@ -342,20 +327,25 @@ def main():
         #     exit(0)
         else:
             memory.append("FORWARD")
-    sleep(0.5)  # Appropriate clock time for the bot to move
+    # Move forward
+    control.push_forward(SPEED)
+    sleep(0.05)  # [FAST]: Appropriate clock time for the bot to move
 
 
 # Entrypoint
 def entry_point():
-    global distance, lineFollower_color, \
+    global distance, distance_left, lineFollower_color, \
         loop_detection_counter, inside_inner_island
     board.set_tone(50, 500)
     get_distance()
-    lineFollower.read(get_code)
+    get_linefollower_code()
+    distance_left = distance
     sleep(3)
     board.set_tone(100, 300)
     while True:
-        lineFollower.read(get_code)
+        get_distance()
+        distance_left = int(distance)
+        get_linefollower_code()
         main()
         sleep(0.05)  # Minimum sleep time for maximum responsiveness
         print("\r" + " " * 50, end=" ")  # Clears the line
