@@ -69,7 +69,8 @@ def get_linefollower_code():
                 memory.append("LEFT")
             print_flush("Wall encountered. Making right turn.")
             control.stop()  # stop when front wall is hit or too close
-            control.move_backward(SPEED, 1000)  # Move back a bit
+            control.move_backward(SPEED, 1500)  # Move back a bit
+            sleep(1)
             # Turn left 90 degrees
             turn_90_left(SPEED, "left")
             # turn_90_left(SPEED, "left")
@@ -342,6 +343,7 @@ def entry_point():
         get_distance()
         distance_left = int(distance)
         get_linefollower_code()
+        # turn_90_left(SPEED, "left")
         main()
         sleep(0.05)  # Minimum sleep time for maximum responsiveness
         print("\r" + " " * 50, end=" ")  # Clears the line
