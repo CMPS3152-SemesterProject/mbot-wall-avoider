@@ -41,7 +41,7 @@ unjam_retries = 0
 SPEED = 60
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
-memory = ["FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", 13]  # Note: 13 steps @125ms @SPEED=60 is ~1 ft.
+memory = ["FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT"]  # Note: 13 steps @125ms @SPEED=60 is ~1 ft.
 # Checkpoints are the indices of the memory list where the bot has turned
 # memory = ["FORWARD"]
 checkpoints = [i + 1 for i in range(len(memory)) if memory[i] == "FORWARD"]
@@ -150,6 +150,7 @@ def display_memory():
             print(f"  {i}: {memory[i]}", flush=True)
     print("End of Memory", flush=True)
 
+
 def display_checkpoints():
     """
     Display the checkpoints of the bot.
@@ -159,6 +160,7 @@ def display_checkpoints():
     for i in range(len(checkpoints)):
         print(f"  {i}: {checkpoints[i]}", flush=True)
     print("End of Checkpoints", flush=True)
+
 
 def play_memory(checkpoint_n=0):
     """
@@ -227,10 +229,19 @@ def memory_rollback_by_checkpoint_n(n):
     :param n: Number of checkpoints to rollback
     """
     global memory
-    if len(memory) > 0 and isinstance(memory[-1], int):
-        # Play the last n checkpoints
-        play_memory(n)
-        memory.pop()
+    if len(memory) > 0:
+        # Check if n is within the bounds of the checkpoints
+        if n > len(checkpoints):
+            raise ValueError("n is out of bounds for rollback.")
+        # Rollback the memory by n checkpoints
+        for _ in range(n):
+            if len(memory) > 0:
+                memory.pop()
+                if len(memory) > 0 and (isinstance(memory[-1], str) and memory[-1] == "FORWARD"):
+                    # Remove the last string command
+                    memory.pop()
+            else:
+                break
         print(f"Rolled back {n} checkpoints", flush=True)
     else:
         print("No memory to rollback", flush=True)
@@ -258,7 +269,7 @@ def main():
             memory.append(0)
         # If memory has at least two elements and the second last is a string
         elif len(memory) > 1 and isinstance(memory[-2], str) and isinstance(memory[-1], int):
-            if memory[-1] != int(virtual_step(1, SPEED)):
+            if len(memory) < 0:
                 memory[-1] += 1
             else:
                 control.stop()
@@ -266,6 +277,7 @@ def main():
                 display_memory()
                 print("Current checkpoints")
                 display_checkpoints()
+                memory_rollback_by_checkpoint_n(4)
                 sleep(5)
                 play_memory()
                 control.stop()
