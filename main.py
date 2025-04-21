@@ -68,7 +68,8 @@ def get_linefollower_code():
             print_flush("Wall encountered. Making right turn.")
             control.stop()  # stop when front wall is hit or too close
             control.move_backward(SPEED, 2000)  # Move back a bit
-            # Turn left 90 degrees, might need some tweaking
+            # Turn left 90 degrees
+            turn_90_left(SPEED, "left")
             turn_90_left(SPEED, "left")
             loop_detection_counter += 1
             # Reset the unjam retries
@@ -284,6 +285,7 @@ def main():
         distance_left, distance_right, unjam_retries, initial_turn, memory, \
         loop_detection_counter, inside_inner_island
     roll = board.get_roll()
+    print_flush(f"Roll: {board.get_roll()} {board.get_yaw()} {board.get_pitch()}")
 
     # If on black line but the robot is tilted significantly => unjam
     if lineFollower_color == 'black' and float(roll) < -30.0:
