@@ -1,11 +1,11 @@
 import makeblock
+import math
 
 from EncoderController import EncoderController
 from makeblock.boards import MeAuriga
 from makeblock.modules.rj25 import LineFollower
 from makeblock.modules.rj25 import Ultrasonic
 from time import sleep
-
 
 # -------------------------
 #   Connect to Me Auriga
@@ -51,29 +51,32 @@ SPEED = 26  # Base speed (if all fails choose 25!)
 """
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
-memory = ["FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT"]  # Note: 13 steps @125ms @SPEED=60 is ~1 ft.
+# memory = ["FORWARD", 31, "LEFT", "FORWARD", 26, "LEFT", "FORWARD", 24, "LEFT", "FORWARD", 24]
+memory = ["FORWARD"]
 # Checkpoints are the indices of the memory list where the bot has turned
-# memory = ["FORWARD"]
 checkpoints = [i + 1 for i in range(len(memory)) if memory[i] == "FORWARD"]
 
 # -------------------------
 #   Functions
 # -------------------------
-def get_linefollower_code():
+def get_line_follower_code():
     """
     Get the color of the line follower sensor
     :return: The color of the line follower sensor
     """
     global lineFollower_color, distance_left, inside_inner_island, \
-        loop_detection_counter, may_need_harder_turn
+        loop_detection_counter, may_need_harder_turn, unjam_retries, memory
     value = lineFollower.get_status(port=LINEFOLLOWER_PORT)
     if int(value) > 0:
         board.set_tone(300, 500)
         lineFollower_color = 'white'
         if inside_inner_island is False:
             # Check if memory is not empty and last element is a string
-            if len(memory) > 0 and isinstance(memory[-1], str):
+            if len(memory) > 0 and isinstance(memory[-1], int):
+                # Round up the last integer in memory
+                memory[-1] = (math.floor(float(memory[-1]) * 0.1) * 10)
                 memory.append("LEFT")
+                memory.append("FORWARD")
             print_flush("Wall encountered. Making right turn.")
             control.stop()  # stop when front wall is hit or too close
             control.move_backward(SPEED, 1500)  # Move back a bit
@@ -85,6 +88,7 @@ def get_linefollower_code():
             loop_detection_counter += 1
             # Reset the unjam retries
             unjam_retries = 0
+            display_memory()
             # if loop_detection_counter == 4 and inside_inner_island is False:
             #     print_flush("Loop detected. Adjusting.")
             #     print_flush("Making 180deg turn.")
@@ -316,8 +320,10 @@ def main():
         exit(1)  # Placeholder
     # If memory has at least two elements and the second last is a string
     if len(memory) > 1 and isinstance(memory[-2], str) and isinstance(memory[-1], int):
-        if len(memory) < 0:
+        if len(memory) > 0:
             memory[-1] += 1
+    else:
+        memory.append(1)
         # else:
         #     control.stop()
         #     print("Current memory")
@@ -329,8 +335,6 @@ def main():
         #     play_memory()
         #     control.stop()
         #     exit(0)
-        else:
-            memory.append("FORWARD")
     # Move forward
     control.lock(distance, DISTANCE_THRESHOLD, SPEED)
     sleep(0.05)  # [FAST]: Appropriate clock time for the bot to move
@@ -342,15 +346,16 @@ def entry_point():
         loop_detection_counter, inside_inner_island
     board.set_tone(50, 500)
     get_distance()
-    get_linefollower_code()
+    get_line_follower_code()
     distance_left = distance
     sleep(3)
     board.set_tone(100, 300)
     while True:
         get_distance()
         distance_left = int(distance)
-        get_linefollower_code()
+        get_line_follower_code()
         # turn_90_left(SPEED, "left")
+        # play_memory()
         main()
         sleep(0.05)  # Minimum sleep time for maximum responsiveness
         print("\r" + " " * 50, end=" ")  # Clears the line
