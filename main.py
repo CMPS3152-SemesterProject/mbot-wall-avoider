@@ -41,7 +41,14 @@ unjam_retries = 0
 loop_detection_counter = 1
 inside_inner_island = False
 may_need_harder_turn = False
-SPEED = 70
+SPEED = 26  # Base speed (if all fails choose 25!)
+"""
+   Known working defaults with the feedback algorithm:
+   - 30 (worse - too little feedback/"slow" sensors)
+   - 25 (stable)
+   - 26 (better)
+   - 13 (horrible - too much feedback)
+"""
 OPTIMISTIC = False
 bot_is_facing = "FORWARD"  # Default direction
 memory = ["FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT", "FORWARD", 13, "LEFT"]  # Note: 13 steps @125ms @SPEED=60 is ~1 ft.

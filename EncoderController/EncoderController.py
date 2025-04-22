@@ -11,9 +11,9 @@ class EncoderController:
         self.position = 0
 
         # For PID control
-        self.Kp = 0.617
+        self.Kp = 0.517
         self.Ki = 0.0
-        self.Kd = 0.5
+        self.Kd = 0.55
         self.previous_error = 0.0
         self.integral = 0.0
 
@@ -106,6 +106,11 @@ class EncoderController:
 
         right_speed = base_speed - control_signal
         right_speed = mix_in.constrain(right_speed, 0, base_speed)
+
+        # if left_speed == 0:
+        #     left_speed = -1 * right_speed
+        # if right_speed == 0:
+        #     right_speed = -1 * left_speed
 
         print(f"Right Dist: {current_distance} | Desired Dist: {desired_distance} |"
               f"L Speed: {left_speed} | R Speed: {right_speed} | Control Signal: {control_signal} | "
