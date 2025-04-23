@@ -85,16 +85,23 @@ def get_line_follower_code():
             turn_90_left(SPEED, "left")
             # turn_90_left(SPEED, "left")
             may_need_harder_turn = True
-            loop_detection_counter += 1
+            if memory[-1] == memory[-2]:
+                # If the last two commands are the same, increment the loop counter
+                loop_detection_counter += 1
+            else:
+                # Otherwise, reset the loop counter
+                loop_detection_counter = 1
             # Reset the unjam retries
             unjam_retries = 0
             display_memory()
-            # if loop_detection_counter == 4 and inside_inner_island is False:
-            #     print_flush("Loop detected. Adjusting.")
-            #     print_flush("Making 180deg turn.")
-            #     turn_90_left(SPEED, "left")
-            #     turn_90_left(SPEED, "left")
-            #     inside_inner_island = True
+            if loop_detection_counter == 4 and inside_inner_island is False:
+                print_flush("Loop detected. Adjusting.")
+                print_flush("Making 180deg turn.")
+                turn_90_left(SPEED, "left")
+                turn_90_left(SPEED, "left")
+                inside_inner_island = True
+                board.set_tone(100, 300)
+                exit(1)
                 # Ideally, put a function below. But for now, just a placeholder.
             # distance_left = 0
     else:
