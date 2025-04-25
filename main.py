@@ -31,55 +31,20 @@ control = EncoderController(board, 1, 2)
 # -------------------------
 lineFollower_color = 'black'  # Default color
 counter = 0
-
-
 inside_Island = False
 looking_for_Island = False
 
+
+#region Initialize line follower reading values
 def set_color(value): #set color of line follower
     global lineFollower_color
     if int(value) != 0:
         lineFollower_color = 'white'
     else:
         lineFollower_color = 'black'
+#endregion Initialize line follower reading values
 
-# def exit_island():
-#
-
-def head_to_island(): #head to island function
-
-    global lineFollower_color
-    global ultrasonicSensor
-    global control
-    global counter
-    global inside_Island
-    global looking_for_Island
-    distance = ultrasonicSensor.get_distance(port=7)
-
-    # Initial stop
-    control.stop()
-    looking_for_Island = True
-    sleep(1)
-    print("\033[92m INSIDE ISLAND...\033[0m")  # Print in green
-
-    print(f"line follower color on entry: {lineFollower_color} \n")
-
-    # Continuously read the line follower data and update color
-    while lineFollower_color != 'white':
-        right_hand_rule()
-        print("Line follower is not white", end="\n")
-    if lineFollower_color == 'white':
-        control.stop()
-        inside_Island = True
-        if inside_Island:
-            print("Is inside Island", end="\n")
-
-            print("Stop 5 seconds.", end="\n")
-            control.stop()
-            board.set_tone(50, 500)
-            return
-
-
+#region turn control functions
 def get_further_from_wall():
     control.controlled_turn(18, 35)
 
@@ -91,7 +56,6 @@ def turn_180_degrees():
     # make a 180-degree turn
     control.controlled_turn(0, 28)
     sleep(2.7)
-
     # sleep(5.3)
     control.stop()
 
@@ -109,7 +73,41 @@ def avoid_wall():
     counter += 1
     # Update print statement
     print(f"\r\033[94mDistance:\033[0m \033[92m{ultrasonicSensor.get_distance(port=7)}\033[0m | \033[94mLine color:\033[0m \033[92m{lineFollower_color}\033[0m", end="", flush=True)
+#endregion
 
+#checks if mbot is within island
+def head_to_island(): #head to island function
+
+    global lineFollower_color
+    global ultrasonicSensor
+    global control
+    global counter
+    global inside_Island
+    global looking_for_Island
+    distance = ultrasonicSensor.get_distance(port=7)
+
+    # Initial stop
+    control.stop()
+    looking_for_Island = True
+    sleep(1)
+
+    print(f"line follower color on entry: {lineFollower_color} \n")
+
+    # Continuously read the line follower data and update color
+    while lineFollower_color != 'white':
+        right_hand_rule()
+        print("Line follower is not white", end="\n")
+    if lineFollower_color == 'white':
+        control.stop()
+        inside_Island = True
+        if inside_Island:
+            print("\033[92m INSIDE ISLAND...\033[0m")  # Print in green
+            control.stop()
+            board.set_tone(50, 500)
+            board.set_color(0,255,0,0)
+            return
+
+#Keeps robot centered based on ultrasonic sensor
 def check_distance():
     global counter
     distance = ultrasonicSensor.get_distance(port=7)
