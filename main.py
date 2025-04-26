@@ -52,12 +52,15 @@ def get_closer_to_wall():
 def turn_180_degrees():
     control.stop()
     # make a 180-degree turn
-    control.controlled_turn(0, 28)
+    control.controlled_turn(0, 35)
     sleep(2.7)
     # sleep(5.3)
     control.stop()
 
-def right_turn():
+def avoid_wall():
+    global counter
+    distance = ultrasonicSensor.get_distance(port=7)
+
     control.stop()  # stop when front wall is hit or too close
     control.move_backward(50, 300)  # Move back a bit
     # Turn left 90 degrees, might need some tweaking
@@ -65,11 +68,6 @@ def right_turn():
     control.stop()  # stop moving
     sleep(1)  # sleep for 1 second for line follower to update
 
-def avoid_wall():
-    global counter
-    distance = ultrasonicSensor.get_distance(port=7)
-
-    right_turn()
     counter += 1
     # Update print statement
     print(f"\r\033[94mDistance:\033[0m \033[92m{distance}\033[0m | \033[94mLine color:\033[0m \033[92m{lineFollower_color}\033[0m", end="", flush=True)
@@ -97,33 +95,19 @@ def head_to_island(): #head to island function
         right_hand_rule()
         print("Line follower is not white", end="\n")
     if lineFollower_color == 'white':
+        avoid_wall()
         control.stop()
-        inside_Island = True
+        if counter == 6:
+            inside_Island = True
         if inside_Island:
             print("\033[92m INSIDE ISLAND...\033[0m")  # Print in green
             control.stop()
             board.set_tone(50, 500)
             board.set_color(0,255,0,0)
+            sleep(2)
+            board.set_color(0,0,0,0)
+            board.set_tone(50, 500)
             return
-
-#Keeps robot centered based on ultrasonic sensor
-def check_distance():
-    global counter
-    distance = ultrasonicSensor.get_distance(port=7)
-    if distance > 10:  # is far from the wall
-        print("Moving closer to wall.", end=" ", flush=True)
-        get_closer_to_wall()
-        if distance > 25:
-            if not looking_for_Island:
-                print("reset counter to 0 NOT IN ISLAND", end="\n")
-                counter = 0
-
-    if distance < 6:  # is too close to the wall
-        print("Moving away form wall", end=" ", flush=True)
-        get_further_from_wall()
-    if 10 > distance > 6:  # is in the middle
-        control.forward_non_stop(35)
-        print("Moving forward at speed 35.", end=" ", flush=True)
 
 def right_hand_rule():
     global inside_Island
@@ -181,7 +165,7 @@ def right_hand_rule():
             print("Moving away form wall", end=" ", flush=True)
             get_further_from_wall()
         if 10 > distance > 6:  # is in the middle
-            control.forward_non_stop(35)
+            control.forward_non_stop(40)
             print("Moving forward at speed 35.", end=" ", flush=True)
 
         # Small delay
