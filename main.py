@@ -67,10 +67,12 @@ def right_turn():
 
 def avoid_wall():
     global counter
+    distance = ultrasonicSensor.get_distance(port=7)
+
     right_turn()
     counter += 1
     # Update print statement
-    print(f"\r\033[94mDistance:\033[0m \033[92m{ultrasonicSensor.get_distance(port=7)}\033[0m | \033[94mLine color:\033[0m \033[92m{lineFollower_color}\033[0m", end="", flush=True)
+    print(f"\r\033[94mDistance:\033[0m \033[92m{distance}\033[0m | \033[94mLine color:\033[0m \033[92m{lineFollower_color}\033[0m", end="", flush=True)
 #endregion
 
 #checks if mbot is within island
@@ -83,14 +85,15 @@ def head_to_island(): #head to island function
     global inside_Island
     global looking_for_Island
 
+    lineFollower.read(set_color)
+
     # Initial stop
     control.stop()
     looking_for_Island = True
-    lineFollower.read(set_color)
     print(f"line follower color on entry: {lineFollower_color} \n")
 
     # Continuously read the line follower data and update color
-    while lineFollower_color != 'white':
+    if lineFollower_color != 'white':
         right_hand_rule()
         print("Line follower is not white", end="\n")
     if lineFollower_color == 'white':
@@ -118,8 +121,8 @@ def check_distance():
     if distance < 6:  # is too close to the wall
         print("Moving away form wall", end=" ", flush=True)
         get_further_from_wall()
-    if 11 > distance > 7:  # is in the middle
-        control.forward_non_stop(20)
+    if 10 > distance > 6:  # is in the middle
+        control.forward_non_stop(35)
         print("Moving forward at speed 35.", end=" ", flush=True)
 
 def right_hand_rule():
@@ -150,22 +153,36 @@ def right_hand_rule():
             print(" Wall encountered, Making right turn", end="\n", flush=False)
             #check if we are in island for a 180-degree turn
             avoid_wall()
-
-        if counter > 3:
-            print(f"COUNTER: {counter} Inside Loop, adjusting to enter island", end="\n")
-            if counter == 4:
-                print("making a 180-degree turn.", end="", flush=True)
-                turn_180_degrees()
-                lineFollower.read(set_color)
-
-                #control.stop()
-
+            distance = ultrasonicSensor.get_distance(port=7)
             lineFollower.read(set_color)
-            head_to_island()
-            if inside_Island:
-                return
-        check_distance()
+            if counter > 3:
+                print(f"COUNTER: {counter} Inside Loop, adjusting to enter island", end="\n")
+                if counter == 4:
+                    print("making a 180-degree turn.", end="", flush=True)
+                    turn_180_degrees()
+                    distance = ultrasonicSensor.get_distance(port=7)
+                    lineFollower.read(set_color)
+                    #control.stop()
 
+                # lineFollower.read(set_color)
+                head_to_island()
+                if inside_Island:
+                     return
+        #check_distance()
+        if distance > 10:  # is far from the wall
+            print("Moving closer to wall.", end=" ", flush=True)
+            get_closer_to_wall()
+            if distance > 25:
+                if not looking_for_Island:
+                    print("reset counter to 0 NOT IN ISLAND", end="\n")
+                    counter = 0
+
+        if distance < 6:  # is too close to the wall
+            print("Moving away form wall", end=" ", flush=True)
+            get_further_from_wall()
+        if 10 > distance > 6:  # is in the middle
+            control.forward_non_stop(35)
+            print("Moving forward at speed 35.", end=" ", flush=True)
 
         # Small delay
         sleep(0.1)
@@ -183,8 +200,8 @@ def main():
     sleep(1)
     print("\033[92m Starting main loop...\033[0m")  # Print in green
 
-    if not inside_Island:
-       right_hand_rule()
+   # if not inside_Island:
+    right_hand_rule()
     #else:
         #board.set_color(0, 255,0,0)
 
