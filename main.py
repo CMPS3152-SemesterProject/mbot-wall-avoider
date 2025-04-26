@@ -196,7 +196,7 @@ def right_hand_rule():
                 print("making a 180-degree turn.", end="", flush=True)
                 turn_180_degrees()
                 inside_Island = True
-                # exit_island()
+                counter = 0
                 # head to island
                 head_to_island()
             else:
