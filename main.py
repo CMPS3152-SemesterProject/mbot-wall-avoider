@@ -1,18 +1,16 @@
 import makeblock
-
 from EncoderController import EncoderController
 from makeblock.boards import MeAuriga
 from makeblock.modules.rj25 import LineFollower
 from makeblock.modules.rj25 import Ultrasonic
 from time import sleep
 
-
 # -------------------------
 #   Connect to Me Auriga
 # -------------------------
 # Fallback to COM4 if not using BLE
 makeblock.add_port("COM3")
-board = MeAuriga.connect(BLE=False)
+board = MeAuriga.connect(BLE=True)
 
 # -------------------------
 #   Sensor Setup
@@ -84,13 +82,11 @@ def head_to_island(): #head to island function
     global counter
     global inside_Island
     global looking_for_Island
-    distance = ultrasonicSensor.get_distance(port=7)
 
     # Initial stop
     control.stop()
     looking_for_Island = True
-    sleep(1)
-
+    lineFollower.read(set_color)
     print(f"line follower color on entry: {lineFollower_color} \n")
 
     # Continuously read the line follower data and update color
@@ -116,10 +112,9 @@ def check_distance():
         get_closer_to_wall()
         if distance > 25:
             if not looking_for_Island:
-                print("reset counter to 0", end="\n")
+                print("reset counter to 0 NOT IN ISLAND", end="\n")
                 counter = 0
-            else:
-                counter = 4
+
     if distance < 6:  # is too close to the wall
         print("Moving away form wall", end=" ", flush=True)
         get_further_from_wall()
@@ -154,22 +149,21 @@ def right_hand_rule():
         if lineFollower_color == 'white':
             print(" Wall encountered, Making right turn", end="\n", flush=False)
             #check if we are in island for a 180-degree turn
-            if not looking_for_Island:
-                avoid_wall()
-            else:
-                right_turn()
+            avoid_wall()
 
+        if counter > 3:
+            print(f"COUNTER: {counter} Inside Loop, adjusting to enter island", end="\n")
             if counter == 4:
-                print("Inside Loop, adjusting to enter island", end="\n")
-                if not looking_for_Island:
-                    print("making a 180-degree turn.", end="", flush=True)
-                    turn_180_degrees()
+                print("making a 180-degree turn.", end="", flush=True)
+                turn_180_degrees()
                 lineFollower.read(set_color)
-                #inside_Island = True
-                # exit_island()
-                head_to_island()
-                if inside_Island:
-                    return
+
+                #control.stop()
+
+            lineFollower.read(set_color)
+            head_to_island()
+            if inside_Island:
+                return
         check_distance()
 
 
