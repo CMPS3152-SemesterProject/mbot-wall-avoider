@@ -8,8 +8,6 @@ DeviceId = "00:1B:10:FB:FD:6C"
 def startup():
     import main as program
     
-    
-    
     """
     This function is called when the robot first starts up.
     It is intended to be used for any setup or initialization
@@ -25,4 +23,3 @@ if __name__ == "__main__":
         multiprocessing.set_start_method("spawn", force=True)
         BluetoothConnector.connect_bridge(device_id=DeviceId)
     startup()
-

@@ -46,6 +46,7 @@ def set_color(value): #set color of line follower
 def get_further_from_wall():
     control.controlled_turn(18, 35)
 
+
 def get_closer_to_wall():
     control.controlled_turn(40, 18)
 
@@ -56,6 +57,7 @@ def turn_180_degrees():
     sleep(2.7)
     # sleep(5.3)
     control.stop()
+
 
 def avoid_wall():
     global counter
