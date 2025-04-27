@@ -90,7 +90,7 @@ def head_to_island(): #head to island function
     # Initial stop
     control.stop()
     looking_for_Island = True
-    print(f"line follower color on entry: {lineFollower_color} \n")
+    print(f"Line follower color on entry: {lineFollower_color} \n")
 
     # Continuously read the line follower data and update color
     if lineFollower_color != 'white':
@@ -102,7 +102,7 @@ def head_to_island(): #head to island function
         if counter == 6:
             inside_Island = True
         if inside_Island:
-            print("\033[92m INSIDE ISLAND...\033[0m")  # Print in green
+            print("\033[92m Inside Island\033[0m")  # Print in green
             control.stop()
             board.set_tone(50, 500)
             board.set_color(0,255,0,0)
@@ -142,9 +142,9 @@ def right_hand_rule():
             distance = ultrasonicSensor.get_distance(port=7)
             lineFollower.read(set_color)
             if counter > 3:
-                print(f"COUNTER: {counter} Inside Loop, adjusting to enter island", end="\n")
+                print(f"(Counter): {counter} Inside Loop, adjusting to enter island", end="\n")
                 if counter == 4:
-                    print("making a 180-degree turn.", end="", flush=True)
+                    print("Making a 180-degree turn", end="", flush=True)
                     turn_180_degrees()
                     distance = ultrasonicSensor.get_distance(port=7)
                     lineFollower.read(set_color)
@@ -160,15 +160,15 @@ def right_hand_rule():
             get_closer_to_wall()
             if distance > 25:
                 if not looking_for_Island:
-                    print("reset counter to 0 NOT IN ISLAND", end="\n")
+                    print("(Not in Island): Resetting counter to 0", end="\n")
                     counter = 0
 
         if distance < 6:  # is too close to the wall
-            print("Moving away form wall", end=" ", flush=True)
+            print("Moving away from wall", end=" ", flush=True)
             get_further_from_wall()
         if 10 > distance > 6:  # is in the middle
             control.forward_non_stop(40)
-            print("Moving forward at speed 35.", end=" ", flush=True)
+            print("Moving forward at speed 35", end=" ", flush=True)
 
         # Small delay
         sleep(0.1)
