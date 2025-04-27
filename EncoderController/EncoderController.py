@@ -29,26 +29,6 @@ class EncoderController:
         self.stop()
         pass
 
-    def move_right(self, speed, ms):
-        self.encoder_left.run(speed)
-        # Invert the speed to make the robot turn left
-        self.encoder_right.run(speed)
-        sleep(ms / 1000)
-        self.stop()
-        pass
-
-    def sharp_left(self, speed, ms):
-        self.encoder_right.run(speed=(speed * -1))
-        sleep(ms / 1000)
-        self.stop()
-        pass
-
-    def sharp_right(self, speed, ms):
-        self.encoder_left.run(speed)
-        sleep(ms / 1000)
-        self.stop()
-        pass
-
     def stop(self):
         self.encoder_left.run(0)
         self.encoder_right.run(0)
@@ -56,16 +36,11 @@ class EncoderController:
 
     def controlled_turn(self, lspeed,rspeed):
         self.encoder_left.run(speed=int(lspeed))
-        self.encoder_right.run(speed=int(rspeed))
-        pass
-
-    def stop_turn_left(self, lspeed,rspeed):
-        self.stop()
-        self.move_backward(5, 200)
-        self.move_left(20, 700)
+        self.encoder_right.run(speed=int(-1*rspeed))
         pass
 
     def forward_non_stop(self, speed):
         self.encoder_right.run(speed=-1*speed)
         self.encoder_left.run(speed)
         pass
+
