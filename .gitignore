@@ -1,3 +1,6 @@
 "venv" 
 .idea/mbot-wall-avoider.iml
 .idea/misc.xml
+*.ino
+*.cpp
+*.h
