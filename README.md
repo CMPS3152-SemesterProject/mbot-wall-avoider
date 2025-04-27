@@ -27,17 +27,3 @@ This project is an mBot wall-avoider robot using Arduino C++ and the Makeblock C
 ## Usage
 
 Once the code is uploaded, your mBot will start avoiding walls using the sensors and motors.
-
-> [!WARNING]
-> If using Bluetooth to connect
->
-> Ensure to search for your device's ID by running the following in the terminal
-```
-ble-scan
-```
-
-And then placing it in the file `BluetoothConnector/BluetoothConnector.ino`
-
-```cpp
-const char* DeviceId = "00:1B:10:FB:A6:7C";  <---- HERE ⚠️
-```
