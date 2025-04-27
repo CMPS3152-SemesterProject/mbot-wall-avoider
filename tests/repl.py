@@ -9,6 +9,7 @@ from makeblock.protocols.PackData import MegaPiPackData
 from makeblock.utils import short2bytes
 
 ser = None
+COMPORT = "COM9"
 # print("CMD1")
 # ser.write(bytearray(b'\xffU\n\x00\x02\x08\x00\x02\x01\xff\x00\x00\n'))
 # sleep(4)
@@ -33,7 +34,7 @@ while True:
         continue
     if data == "reconnect":
         try:
-            ser = serial.Serial("COM4", 115200)
+            ser = serial.Serial(COMPORT, 115200)
         except:
             print("You are already connected.")
             continue
@@ -49,7 +50,7 @@ while True:
         ser.write(byte_command)
     except:
         try:
-            ser = serial.Serial("COM4", 115200)
+            ser = serial.Serial(COMPORT, 115200)
             sleep(3)
             ser.write(byte_command)
         except:

@@ -8,7 +8,7 @@ from makeblock.modules.rj25 import Ultrasonic, LineFollower, EncoderMotor
 makeblock.add_port("COM4")
 
 # Connect to the MeAuriga board
-board = MeAuriga.connect()
+board = MeAuriga.connect(BLE=True)
 
 # Connect to the Ultrasonic sensor
 ultrasonic = Ultrasonic(board, port=7)
@@ -53,4 +53,5 @@ while True:
     ultrasonic.read(on_received)
     linereader.read(on_line)
 
-    sleep(0.1)
+    sleep(0.05)  # For Bluetooth, 0.02 is the minimum sleep time to avoid data loss in the communication
+    # 0.05 is the recommended sleep time for Bluetooth communication
