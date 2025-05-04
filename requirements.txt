@@ -1,1 +1,2 @@
 git+https://github.com/CMPS3152-SemesterProject/makeblock
+pygame
