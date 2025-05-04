@@ -18,8 +18,8 @@ void EncoderController::moveLeft(int speed, int duration) {
 }
 
 void EncoderController::stop() {
-    motorLeft.stop();
-    motorRight.stop();
+    motorLeft.runSpeed(0);
+    motorRight.runSpeed(0);
 }
 
 void EncoderController::controlledTurn(int leftSpeed, int rightSpeed) {
